@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>iOS HIG · Карточки</title>
+<style>
+  :root{
+    --grad: linear-gradient(135deg, #FF9C6B 0%, #E15850 100%);
+    --grad-plate: linear-gradient(135deg, #EF885F 0%, #EE7F60 20%, #EA6159 40%, #E66261 58%, #E2727A 78%, #DE7687 100%);
+    --bg: #f2f2f7;
+    --card-bg: #ffffff;
+    --text: #1c1c1e;
+    --text-secondary: #6e6e73;
+    --accent: #E15850;
+    --green: #2fae54;
+    --red: #e5473f;
+    --radius: 20px;
+    --shadow: 0 10px 24px rgba(0,0,0,0.08);
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+  }
+  #app{
+    max-width: 460px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 18px 0 8px;
+    position: sticky;
+    top:0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .back-btn{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:none;
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color: var(--accent);
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .topbar h1{
+    font-size: 20px;
+    font-weight: 700;
+    margin:0;
+    flex:1;
+  }
+  .home-btn{
+    width:44px; height:44px;
+    border-radius:14px;
+    border:none;
+    background: var(--grad);
+    box-shadow: var(--shadow);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .home-btn svg{ width:20px; height:20px; }
+  .empty-placeholder{
+    flex:1;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-secondary);
+    font-size: 15px;
+    text-align:center;
+  }
+  .screen{ display:none; flex-direction: column; flex:1; padding: 0 20px 32px; animation: fadeIn .25s ease; }
+  .screen.active{ display:flex; }
+  @keyframes fadeIn{ from{opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+
+  .page-title{
+    font-size: 34px;
+    font-weight: 800;
+    margin: 6px 0 18px;
+    letter-spacing: -0.02em;
+  }
+  .group-section{ margin-bottom: 8px; }
+  .group-section:not(:first-child){ margin-top: 30px; }
+  .group-title{
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .group-subtitle{
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin: 0 0 14px;
+  }
+
+  .continue-banner{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 18px;
+    cursor:pointer;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .continue-banner .dot{
+    width:10px;height:10px;border-radius:50%;
+    background: var(--accent); flex-shrink:0;
+  }
+  .continue-banner .txt{ flex:1; }
+  .continue-banner .txt strong{ display:block; font-size:15px; }
+  .continue-banner .txt span{ font-size:13px; color: var(--text-secondary); }
+  .continue-banner .arrow{ color: var(--text-secondary); font-size:18px; }
+
+  .cat-list{
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cat-row{
+    display:flex; align-items:center; gap: 13px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+  }
+  .cat-row .icon-box{
+    width:48px; height:48px; border-radius: 12px;
+    background: var(--grad);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .cat-row .icon-box svg{ width:32px; height:32px; }
+  .cat-row .label{ flex:1; min-width:0; }
+  .cat-row .label strong{ display:block; font-size:15px; font-weight:700; }
+  .cat-row .label span{
+    display:block; font-size:12px; color: var(--text-secondary); margin-top:2px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .cat-row .count{ font-size:11.5px; color: var(--text-secondary); font-weight:600; flex-shrink:0; }
+  .cat-row .chev{ color: var(--text-secondary); font-size:18px; flex-shrink:0; }
+
+  .quiz-all-row{
+    display:flex; align-items:center; gap: 14px;
+    background: var(--grad-plate);
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    color: #fff;
+    width: 100%;
+    margin-bottom: 26px;
+    position: relative;
+  }
+  .quiz-all-row .icon-box{
+    width:48px; height:48px; border-radius: 12px;
+    background: rgba(255,255,255,0.25);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 22px;
+    flex-shrink:0;
+  }
+  .quiz-all-row .label{ flex:1; min-width:0; }
+  .quiz-all-row .label strong{ display:block; font-size:16px; font-weight:800; }
+  .quiz-all-row .label span{ display:block; font-size:12.5px; opacity:.9; margin-top:2px; }
+  .quiz-all-row .chev{ font-size:18px; opacity:.9; flex-shrink:0; }
+
+  .quiz-all-row.is-disabled{
+    cursor: default;
+    filter: grayscale(0.55);
+    opacity: 0.68;
+  }
+  .quiz-all-row .lock-badge{
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.32);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .subgrid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .subgrid-item{
+    border-radius: 18px;
+    background: var(--grad);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    border: none;
+    text-align: left;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    min-height: 140px;
+    display:flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .subgrid-item .icon-row{ display:flex; gap:4px; margin-bottom: 10px; opacity:.95; }
+  .subgrid-item .icon-row svg{ width:26px; height:26px; }
+  .subgrid-item h3{ margin:0 0 4px; font-size: 16px; font-weight: 800; line-height:1.15; }
+  .subgrid-item p{ margin:0; font-size:11.5px; opacity:.92; line-height:1.3; }
+  .subgrid-item .count-pill{
+    position:absolute; top:10px; right:10px;
+    background: rgba(255,255,255,0.25);
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+
+  .mode-select{
+    display:flex; flex-direction: column; gap: 14px; margin-top: 8px;
+  }
+  .comp-preview{
+    border-radius: var(--radius);
+    background: var(--grad);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 22px;
+    display:flex; align-items:center; justify-content:center;
+    height: 150px;
+  }
+  .comp-preview svg{ width:100%; height:100%; }
+  .comp-preview.has-image{ padding:0; background:none; overflow:hidden; }
+  .comp-preview.has-image img{ display:block; width:100%; height:100%; object-fit:cover; }
+
+  .mode-btn{
+    display:flex; align-items:center; gap: 14px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+  .mode-btn .emoji-box{
+    width:46px; height:46px; border-radius: 12px;
+    background: var(--grad);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 22px;
+    flex-shrink:0;
+  }
+  .mode-btn .label{ flex:1; }
+  .mode-btn .label strong{ display:block; font-size:16px; }
+  .mode-btn .label span{ font-size:13px; color: var(--text-secondary); }
+  .mode-btn .chev{ color: var(--text-secondary); font-size:18px; }
+
+  .progress-row{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    margin: 4px 0 18px;
+  }
+  .progress-dot{
+    width:7px; height:7px; border-radius:50%;
+    background: #d4d4d9;
+    transition: background .2s, transform .2s;
+  }
+  .progress-dot.done{ background: var(--accent); }
+  .progress-dot.current{ background: var(--accent); transform: scale(1.4); }
+
+  .counter{
+    text-align:center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .flash-card{
+    background: var(--grad);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 26px;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    min-height: 230px;
+    justify-content: center;
+  }
+  .flash-card svg{ width:100%; max-width: 320px; height: auto; }
+  .flash-card.has-image{ padding:0; background: none; box-shadow: var(--shadow); border-radius:24px; overflow:hidden; }
+  .flash-card.has-image img{ display:block; width:calc(100% + 2px); max-width:none; height:auto; margin:-1px; }
+  .flash-card-wrap{ position:relative; }
+  .examples-link{
+    position:absolute;
+    right:16px; bottom:14px;
+    display:flex; align-items:center; gap:2px;
+    background: rgba(255,255,255,0.22);
+    color:#fff;
+    font-size:13px; font-weight:700;
+    padding:6px 10px 6px 12px;
+    border-radius:999px;
+    border:none;
+    cursor:pointer;
+  }
+
+  /* ---------- INFO SCREEN ---------- */
+  .info-caption{ font-size:18px; font-weight:600; color: var(--text); margin: 20px 0 12px; }
+  .info-caption:first-child{ margin-top:4px; }
+  .info-subheading{ font-size:15px; font-weight:600; color: var(--text); margin: 18px 0 6px; }
+  .info-paragraph{ font-size:15px; line-height:1.5; color: var(--text-secondary); margin: 0 0 8px; white-space: pre-line; }
+  .phone-mock{
+    width:100%; max-width: 280px;
+    margin: 18px auto 8px;
+    background:#000;
+    border-radius: 40px;
+    padding: 10px;
+    box-shadow: var(--shadow);
+  }
+  .phone-mock .mock-screen{
+    background: var(--bg);
+    border-radius: 30px;
+    overflow: hidden;
+    display:flex; flex-direction:column;
+    min-height: 360px;
+    position: relative;
+  }
+  .phone-mock .status-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 18px 4px;
+    font-size:12px; font-weight:700; color:var(--text);
+  }
+  .phone-mock .status-bar .dots{ display:flex; gap:3px; align-items:center; }
+  .phone-mock .status-bar .dots span{ width:3px; height:3px; border-radius:50%; background:var(--text); display:inline-block; }
+  .ex-body{ flex:1; position:relative; padding: 8px 14px 0; }
+
+  /* Action sheet example */
+  .ex-mail-header{ display:flex; justify-content:space-between; align-items:center; padding:6px 2px 10px; }
+  .ex-mail-header .x{ width:26px; height:26px; border-radius:50%; background:#e2e2e7; }
+  .ex-mail-header .send{ width:26px; height:26px; border-radius:50%; background: var(--accent); }
+  .ex-mail-title{ font-size:14px; font-weight:700; background:#e9e9ee; display:inline-block; padding:5px 10px; border-radius:8px; margin-bottom:8px; }
+  .ex-mail-row{ height:11px; background:#e9e9ee; border-radius:4px; margin-bottom:8px; width:85%; }
+  .ex-sheet-pop{
+    position:absolute; left:10px; right:10px; bottom:10px;
+    background:#fff; border-radius:16px;
+    box-shadow: 0 -6px 18px rgba(0,0,0,0.12);
+    overflow:hidden;
+  }
+  .ex-sheet-pop .opt{ padding:13px; text-align:center; font-size:13.5px; font-weight:600; border-bottom:1px solid #ececf1; }
+  .ex-sheet-pop .opt.destructive{ color:var(--red); }
+
+  /* Alert example */
+  .ex-alert-dim{ position:absolute; inset:0; background:rgba(0,0,0,0.25); }
+  .ex-alert-box{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width: 200px; background:#f7f7fa; border-radius:14px; overflow:hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .ex-alert-box .at{ font-size:13px; font-weight:700; text-align:center; padding:14px 12px 4px; }
+  .ex-alert-box .am{ font-size:11px; color:var(--text-secondary); text-align:center; padding:0 12px 12px; }
+  .ex-alert-box .ab{ display:flex; border-top:1px solid #d9d9de; }
+  .ex-alert-box .ab div{ flex:1; text-align:center; padding:10px 0; font-size:12.5px; font-weight:600; color:var(--accent); }
+  .ex-alert-box .ab div:first-child{ border-right:1px solid #d9d9de; color:var(--text); }
+
+  /* Page control example */
+  .ex-hero{ margin-top:6px; height:220px; border-radius:18px; background: var(--grad); }
+  .ex-dots{ display:flex; justify-content:center; gap:6px; margin-top:14px; }
+  .ex-dots span{ width:6px; height:6px; border-radius:50%; background:#c7c7cc; }
+  .ex-dots span.on{ background: var(--accent); }
+
+  /* Sheet example */
+  .ex-sheet-tall{
+    position:absolute; left:0; right:0; bottom:0; top:35%;
+    background:#fff; border-radius:18px 18px 0 0;
+    box-shadow: 0 -6px 18px rgba(0,0,0,0.12);
+    padding-top:8px;
+  }
+  .ex-sheet-tall .grabber{ width:36px; height:4px; border-radius:2px; background:#d9d9de; margin:0 auto 14px; }
+  .ex-sheet-tall .row{ height:10px; background:#ececf1; border-radius:4px; margin:0 16px 10px; }
+  .ex-sheet-tall .row.short{ width:40%; }
+
+  .info-image{ margin: 0 0 20px; }
+  .info-image img{
+    display:block;
+    width:100%;
+    max-width: 300px;
+    max-height: 420px;
+    height:auto;
+    object-fit: contain;
+    margin: 0 auto;
+  }
+  .info-image.small img{ max-width: 130px; }
+  .info-image.xsmall img{ max-width: 95px; }
+  .info-image.full img{ max-width: 100%; }
+  .info-image-cap{
+    text-align:center;
+    font-size:12.5px;
+    color: var(--text-secondary);
+    margin-top:8px;
+  }
+
+  .picker{ margin: 4px 0 20px; }
+  .picker-panel{ display:none; }
+  .picker-panel.active{ display:block; }
+  .picker-panel .info-image{ margin: 0 0 16px; }
+  .wheel-picker{
+    position:relative;
+    height:170px;
+    border-radius:14px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .wheel-track{
+    height:100%;
+    overflow-y:scroll;
+    scroll-snap-type: y mandatory;
+    padding: 68px 0;
+    scrollbar-width:none;
+  }
+  .wheel-track::-webkit-scrollbar{ display:none; }
+  .wheel-item{
+    height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    scroll-snap-align:center;
+    font-size:15px;
+    color: var(--text-secondary);
+    cursor:pointer;
+    white-space:nowrap;
+    padding:0 12px;
+    text-align:center;
+    background:none;
+    border:none;
+    width:100%;
+    transition: color .1s;
+  }
+  .wheel-item.center{
+    color: var(--text);
+    font-weight:700;
+  }
+  .wheel-highlight{
+    position:absolute;
+    left:0; right:0; top:50%;
+    height:34px;
+    margin-top:-17px;
+    border-top:1px solid #d1d1d6;
+    border-bottom:1px solid #d1d1d6;
+    pointer-events:none;
+  }
+  .wheel-fade-top, .wheel-fade-bottom{
+    position:absolute; left:0; right:0; height:56px; pointer-events:none;
+  }
+  .wheel-fade-top{ top:0; background: linear-gradient(var(--card-bg), rgba(255,255,255,0)); }
+  .wheel-fade-bottom{ bottom:0; background: linear-gradient(rgba(255,255,255,0), var(--card-bg)); }
+
+  .card-info{
+    text-align:center;
+    margin-top: 18px;
+  }
+  .cat-badge{
+    position:absolute;
+    top:14px; left:16px;
+    display:inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(255,255,255,0.22);
+    padding: 4px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+  }
+  .cat-badge:empty{ display:none; }
+  .name-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .card-info .eng-name{
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .card-info .ru-desc{
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+  .nav-row{
+    display:flex; align-items:center; gap: 12px;
+    margin-top: auto;
+    padding-top: 22px;
+  }
+  .nav-btn{
+    flex:1;
+    padding: 15px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .nav-btn.secondary{
+    background: var(--card-bg);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+  .nav-btn.primary{
+    background: var(--accent);
+    color: white;
+  }
+  .nav-btn:disabled{ opacity:.35; cursor:default; }
+  .nav-arrow{
+    flex: 0 0 84px;
+    width: 84px;
+    height: 52px;
+    padding: 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 22px;
+    line-height: 1;
+    background: var(--card-bg);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+  .nav-arrow.primary{
+    background: var(--accent);
+    color: #fff;
+    box-shadow: none;
+  }
+  .nav-examples{
+    flex:1;
+    font-weight: 700;
+    background: var(--card-bg);
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+  .nav-examples:disabled{
+    font-weight: 400;
+  }
+
+  .quiz-input-wrap{ margin-top: 22px; }
+  .quiz-input{
+    width:100%;
+    padding: 16px 18px;
+    font-size: 18px;
+    border-radius: 14px;
+    border: 1px solid #e2e2e7;
+    background: var(--card-bg);
+    outline: none;
+    text-align:center;
+    font-weight: 400;
+    color: var(--text);
+    transition: border-color .15s, color .15s;
+  }
+  .quiz-input:focus{ border-color: var(--accent); }
+  .quiz-input.correct{ border-color: var(--green); color: var(--green); background: #eafaf0; }
+  .quiz-input.incorrect{ border-color: var(--red); color: var(--red); background: #fdeeed; }
+  .quiz-hint{
+    text-align:center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    min-height: 18px;
+  }
+  .quiz-hint.reveal{ color: var(--red); font-weight: 600; }
+  .quiz-hint.typo{ color: var(--green); font-weight: 600; }
+
+  .result-wrap{
+    display:flex; flex-direction: column; align-items:center; justify-content:center;
+    flex:1; text-align:center; gap:10px;
+  }
+  .result-score{
+    font-size: 56px;
+    font-weight: 800;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .result-wrap p{ color: var(--text-secondary); font-size:15px; max-width: 280px; }
+  .result-actions{ display:flex; gap:12px; width:100%; margin-top: 18px; }
+
+  ::selection{ background: rgba(225,88,80,0.2); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="topbar" style="visibility:hidden;"><button class="back-btn">‹</button></div>
+    <div style="padding: 0 0 8px;">
+      <div id="continueBanner"></div>
+      <div id="homeGroups"></div>
+    </div>
+  </div>
+
+  <!-- DESIGN SYSTEM SECTION (placeholder, empty for now) -->
+  <div class="screen" id="screen-design-system">
+    <div class="topbar">
+      <button class="back-btn" onclick="goHome()">‹</button>
+      <h1>Дизайн-система iOS</h1>
+    </div>
+    <div class="empty-placeholder">
+      <p>Раздел скоро появится</p>
+    </div>
+  </div>
+
+  <!-- CATEGORY (mode select) -->
+  <div class="screen" id="screen-category">
+    <div class="topbar">
+      <button class="back-btn" onclick="goHome()">‹</button>
+      <h1 id="catTitle"></h1>
+      <button class="home-btn" onclick="goHome()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.1883 24H4.82625C4.11179 24 3.44107 23.9708 2.77035 23.7813C1.56015 23.4459 0.554071 22.4399 0.218712 21.2297C0.0291616 20.5444 0 19.8882 0 19.1738V4.82625C0 4.11179 0.0291616 3.44107 0.218712 2.77035C0.554071 1.54557 1.54557 0.554071 2.75577 0.218712C3.44107 0.0291616 4.11179 0 4.82625 0H19.1738C19.8882 0 20.5589 0.0291616 21.2297 0.218712C22.4399 0.554071 23.4459 1.56015 23.7813 2.77035C23.9708 3.45565 24 4.12637 24 4.82625V19.1738C24 19.8882 23.9708 20.5444 23.7813 21.2297C23.4459 22.4253 22.469 23.4168 21.2734 23.7667C20.5881 23.9708 19.932 24 19.1883 24ZM20.9672 22.819C21.842 22.5857 22.5711 21.842 22.8044 20.9964C22.9648 20.4131 22.9939 19.8299 22.9939 19.2175V4.73876C22.9939 4.14095 22.9648 3.61604 22.819 3.04739C22.5857 2.17254 21.8566 1.42892 20.9818 1.18105C20.3985 1.02066 19.8153 0.991495 19.2029 0.991495H4.79708C4.17011 0.991495 3.60146 1.00608 3.01823 1.18105C2.15796 1.41434 1.42892 2.14338 1.19563 3.00365C1.03524 3.58688 1.00608 4.17011 1.00608 4.7825V19.2904C1.00608 19.8736 1.03524 20.4131 1.19563 20.9672C1.4435 21.8275 2.15796 22.5565 3.01823 22.7898C3.60146 22.9502 4.18469 22.9793 4.79708 22.9793H19.2467C19.8299 22.9793 20.3694 22.9648 20.9672 22.7898V22.819Z" fill="#ffffff"/><path d="M19.028 15.4994H5.00127C4.15559 15.4994 3.49945 14.8287 3.49945 13.9976V4.98664C3.49945 4.19927 4.14101 3.49939 4.94295 3.49939H19.0572C19.8737 3.49939 20.5007 4.19927 20.5007 4.98664V13.983C20.5007 14.7849 19.8883 15.4848 19.028 15.4848V15.4994Z" fill="#ffffff"/><path d="M18.9697 20.5006H4.94292C4.09724 20.5006 3.48484 19.757 3.48484 18.9696V17.9344C3.49942 17.147 4.18472 16.5055 4.98666 16.5055H18.9988C19.8591 16.5055 20.5006 17.2053 20.5006 18.0365V19.0134C20.5006 19.8445 19.8445 20.5006 18.9697 20.5006Z" fill="#ffffff"/></svg></button>
+    </div>
+    <div class="comp-preview" id="catPreview"></div>
+    <div class="mode-select">
+      <button class="mode-btn" onclick="startStudy()">
+        <div class="emoji-box"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M6.52509 0.00572917C7.4424 0.135781 8.32872 0.476667 9.02445 1.12005L9.02215 17.0443C8.51068 15.8389 7.42346 15.0436 6.1003 15.0419L3.2215 15.0391C2.86847 15.0247 2.578 14.7664 2.578 14.3877V0.610156C2.57858 0.293906 2.82541 0.115156 3.05044 0L6.52509 0.00572917Z" fill="white"/>
+<path d="M16.2849 0C16.6006 0.129479 16.7952 0.401615 16.7573 0.781458V10.0684C14.1552 9.30818 11.4521 10.5394 10.3137 13.0029L10.3109 1.12062C11.0106 0.474948 11.8918 0.135781 12.8108 0.00515625L16.2849 0Z" fill="white"/>
+<path d="M22 20.2383V20.7539C21.864 21.3835 21.3835 21.8642 20.7538 22H20.2383C19.8772 21.9186 19.5919 21.7233 19.3227 21.4529L17.8015 19.926C18.7039 19.4167 19.4174 18.704 19.9266 17.8011L21.4529 19.3222C21.7233 19.5915 21.9191 19.8773 22 20.2383Z" fill="white"/>
+<path d="M15.2149 19.297C17.4693 19.297 19.2969 17.4694 19.2969 15.2149C19.2969 12.9605 17.4693 11.1329 15.2149 11.1329C12.9605 11.1329 11.1329 12.9605 11.1329 15.2149C11.1329 17.4694 12.9605 19.297 15.2149 19.297Z" fill="white"/>
+<path d="M6.0848 16.3293C6.91314 16.3304 7.60083 16.8506 7.84136 17.6172H0.648663C0.285297 17.6166 0 17.333 0 16.9652V2.3713C0 1.97599 0.317443 1.71302 0.683679 1.7176L1.28871 1.72448L1.28986 14.3899C1.28986 15.467 2.15436 16.3241 3.22207 16.3253L6.0848 16.3293Z" fill="white"/>
+<path d="M19.3347 2.34781L19.3359 11.7545C18.9404 11.3289 18.542 10.9553 18.0466 10.6505V1.72333L18.6562 1.7176C18.9834 1.71474 19.3347 1.94677 19.3347 2.34781Z" fill="white"/>
+</svg></div>
+        <div class="label"><strong>Изучение</strong><span>Карточки с описанием каждого компонента</span></div>
+        <div class="chev">›</div>
+      </button>
+      <button class="mode-btn" onclick="startGlobalQuiz()">
+        <div class="emoji-box"><svg width="22" height="20" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M26 13.3801C25.8378 13.9161 25.2686 14.2366 24.7164 13.9952L21.5195 12.601C21.1417 12.4363 20.9173 12.1094 20.927 11.7219C20.9367 11.3594 21.1579 11.0535 21.5195 10.8952L24.7164 9.50104C25.2686 9.26046 25.8386 9.57854 26.0008 10.1323L26.0008 13.3793L26 13.3801Z" fill="white"/>
+<path d="M-0.000426197 12.6567L8.55686 12.6551L8.85637 13.3736L2.80895 19.4097C1.18064 17.5061 0.206241 15.2102 -0.000426197 12.6567Z" fill="white"/>
+<path d="M12.6797 8.54518L12.6797 7.93978e-08C15.1815 0.196172 17.5251 1.15846 19.4456 2.80534L13.399 8.83904L12.6797 8.54518Z" fill="white"/>
+<path d="M12.6789 14.9712L13.3901 14.6507L19.4448 20.6925C17.5251 22.3386 15.1807 23.3001 12.6797 23.4978L12.6789 14.9712Z" fill="white"/>
+<path d="M10.1456 8.84227L4.09739 2.80534C6.01713 1.15927 8.3607 0.196172 10.8633 0L10.8617 8.55729L10.1456 8.84227Z" fill="white"/>
+<path d="M4.09739 20.6941L10.1448 14.658L10.8633 14.9567V23.4979C8.38007 23.2977 6.05911 22.3652 4.09739 20.6941Z" fill="white"/>
+<path d="M0.00522726 10.8419C0.188483 8.34822 1.16934 6.00788 2.80976 4.08975L8.85718 10.1259L8.55768 10.8427H0.00603598L0.00522726 10.8419Z" fill="white"/>
+<path d="M14.9805 12.6559H19.2664C19.536 13.3825 20.0357 13.9201 20.73 14.2317L23.0461 15.2481C22.5601 16.7941 21.7908 18.1738 20.7324 19.4097L14.6858 13.3736L14.9797 12.6567L14.9805 12.6559Z" fill="white"/>
+<path d="M19.272 10.8419H14.9708L14.6858 10.1267L20.7324 4.08975C21.79 5.32572 22.5577 6.70457 23.0445 8.25053L20.772 9.24673C20.0785 9.55431 19.557 10.0645 19.272 10.8419Z" fill="white"/>
+<path d="M10.2578 11.7485C10.2578 12.5827 10.9355 13.259 11.7715 13.259C12.6075 13.259 13.2852 12.5827 13.2852 11.7485C13.2852 10.9143 12.6075 10.2381 11.7715 10.2381C10.9355 10.2381 10.2578 10.9143 10.2578 11.7485Z" fill="white"/>
+</svg></div>
+        <div class="label"><strong>Викторина</strong><span>Введите название компонента на английском</span></div>
+        <div class="chev">›</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- STUDY -->
+  <div class="screen" id="screen-study">
+    <div class="topbar">
+      <button class="back-btn" onclick="goCategory()">‹</button>
+      <h1 id="studyTitle">Изучение</h1>
+      <button class="home-btn" onclick="goHome()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.1883 24H4.82625C4.11179 24 3.44107 23.9708 2.77035 23.7813C1.56015 23.4459 0.554071 22.4399 0.218712 21.2297C0.0291616 20.5444 0 19.8882 0 19.1738V4.82625C0 4.11179 0.0291616 3.44107 0.218712 2.77035C0.554071 1.54557 1.54557 0.554071 2.75577 0.218712C3.44107 0.0291616 4.11179 0 4.82625 0H19.1738C19.8882 0 20.5589 0.0291616 21.2297 0.218712C22.4399 0.554071 23.4459 1.56015 23.7813 2.77035C23.9708 3.45565 24 4.12637 24 4.82625V19.1738C24 19.8882 23.9708 20.5444 23.7813 21.2297C23.4459 22.4253 22.469 23.4168 21.2734 23.7667C20.5881 23.9708 19.932 24 19.1883 24ZM20.9672 22.819C21.842 22.5857 22.5711 21.842 22.8044 20.9964C22.9648 20.4131 22.9939 19.8299 22.9939 19.2175V4.73876C22.9939 4.14095 22.9648 3.61604 22.819 3.04739C22.5857 2.17254 21.8566 1.42892 20.9818 1.18105C20.3985 1.02066 19.8153 0.991495 19.2029 0.991495H4.79708C4.17011 0.991495 3.60146 1.00608 3.01823 1.18105C2.15796 1.41434 1.42892 2.14338 1.19563 3.00365C1.03524 3.58688 1.00608 4.17011 1.00608 4.7825V19.2904C1.00608 19.8736 1.03524 20.4131 1.19563 20.9672C1.4435 21.8275 2.15796 22.5565 3.01823 22.7898C3.60146 22.9502 4.18469 22.9793 4.79708 22.9793H19.2467C19.8299 22.9793 20.3694 22.9648 20.9672 22.7898V22.819Z" fill="#ffffff"/><path d="M19.028 15.4994H5.00127C4.15559 15.4994 3.49945 14.8287 3.49945 13.9976V4.98664C3.49945 4.19927 4.14101 3.49939 4.94295 3.49939H19.0572C19.8737 3.49939 20.5007 4.19927 20.5007 4.98664V13.983C20.5007 14.7849 19.8883 15.4848 19.028 15.4848V15.4994Z" fill="#ffffff"/><path d="M18.9697 20.5006H4.94292C4.09724 20.5006 3.48484 19.757 3.48484 18.9696V17.9344C3.49942 17.147 4.18472 16.5055 4.98666 16.5055H18.9988C19.8591 16.5055 20.5006 17.2053 20.5006 18.0365V19.0134C20.5006 19.8445 19.8445 20.5006 18.9697 20.5006Z" fill="#ffffff"/></svg></button>
+    </div>
+    <div class="counter" id="studyCounter"></div>
+    <div class="flash-card-wrap">
+      <div class="flash-card" id="studyCardIcon"></div>
+      <div class="cat-badge" id="studyCatBadge"></div>
+    </div>
+    <div class="card-info">
+      <div class="name-row">
+        <div class="eng-name" id="studyName"></div>
+      </div>
+      <div class="ru-desc" id="studyDesc"></div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn nav-arrow" id="studyPrev" onclick="studyStep(-1)" aria-label="Назад">‹</button>
+      <button class="nav-btn nav-examples" id="studyExamplesBtn" onclick="openInfo()">Примеры</button>
+      <button class="nav-btn nav-arrow primary" id="studyNext" onclick="studyStep(1)" aria-label="Далее">›</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="screen" id="screen-quiz">
+    <div class="topbar">
+      <button class="back-btn" onclick="goCategory()">‹</button>
+      <h1>Викторина</h1>
+      <button class="home-btn" onclick="goHome()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.1883 24H4.82625C4.11179 24 3.44107 23.9708 2.77035 23.7813C1.56015 23.4459 0.554071 22.4399 0.218712 21.2297C0.0291616 20.5444 0 19.8882 0 19.1738V4.82625C0 4.11179 0.0291616 3.44107 0.218712 2.77035C0.554071 1.54557 1.54557 0.554071 2.75577 0.218712C3.44107 0.0291616 4.11179 0 4.82625 0H19.1738C19.8882 0 20.5589 0.0291616 21.2297 0.218712C22.4399 0.554071 23.4459 1.56015 23.7813 2.77035C23.9708 3.45565 24 4.12637 24 4.82625V19.1738C24 19.8882 23.9708 20.5444 23.7813 21.2297C23.4459 22.4253 22.469 23.4168 21.2734 23.7667C20.5881 23.9708 19.932 24 19.1883 24ZM20.9672 22.819C21.842 22.5857 22.5711 21.842 22.8044 20.9964C22.9648 20.4131 22.9939 19.8299 22.9939 19.2175V4.73876C22.9939 4.14095 22.9648 3.61604 22.819 3.04739C22.5857 2.17254 21.8566 1.42892 20.9818 1.18105C20.3985 1.02066 19.8153 0.991495 19.2029 0.991495H4.79708C4.17011 0.991495 3.60146 1.00608 3.01823 1.18105C2.15796 1.41434 1.42892 2.14338 1.19563 3.00365C1.03524 3.58688 1.00608 4.17011 1.00608 4.7825V19.2904C1.00608 19.8736 1.03524 20.4131 1.19563 20.9672C1.4435 21.8275 2.15796 22.5565 3.01823 22.7898C3.60146 22.9502 4.18469 22.9793 4.79708 22.9793H19.2467C19.8299 22.9793 20.3694 22.9648 20.9672 22.7898V22.819Z" fill="#ffffff"/><path d="M19.028 15.4994H5.00127C4.15559 15.4994 3.49945 14.8287 3.49945 13.9976V4.98664C3.49945 4.19927 4.14101 3.49939 4.94295 3.49939H19.0572C19.8737 3.49939 20.5007 4.19927 20.5007 4.98664V13.983C20.5007 14.7849 19.8883 15.4848 19.028 15.4848V15.4994Z" fill="#ffffff"/><path d="M18.9697 20.5006H4.94292C4.09724 20.5006 3.48484 19.757 3.48484 18.9696V17.9344C3.49942 17.147 4.18472 16.5055 4.98666 16.5055H18.9988C19.8591 16.5055 20.5006 17.2053 20.5006 18.0365V19.0134C20.5006 19.8445 19.8445 20.5006 18.9697 20.5006Z" fill="#ffffff"/></svg></button>
+    </div>
+    <div class="counter" id="quizCounter"></div>
+    <div class="flash-card" id="quizCardIcon"></div>
+    <div class="quiz-input-wrap">
+      <input type="text" class="quiz-input" id="quizInput" placeholder="Название на английском" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="quiz-hint" id="quizHint"></div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn secondary" id="quizSkip" onclick="quizSkip()">Пропустить</button>
+      <button class="nav-btn primary" id="quizCheck" onclick="quizCheck()">Проверить</button>
+    </div>
+  </div>
+
+  <!-- QUIZ RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="topbar">
+      <button class="back-btn" onclick="goCategory()">‹</button>
+      <h1>Результат</h1>
+      <button class="home-btn" onclick="goHome()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.1883 24H4.82625C4.11179 24 3.44107 23.9708 2.77035 23.7813C1.56015 23.4459 0.554071 22.4399 0.218712 21.2297C0.0291616 20.5444 0 19.8882 0 19.1738V4.82625C0 4.11179 0.0291616 3.44107 0.218712 2.77035C0.554071 1.54557 1.54557 0.554071 2.75577 0.218712C3.44107 0.0291616 4.11179 0 4.82625 0H19.1738C19.8882 0 20.5589 0.0291616 21.2297 0.218712C22.4399 0.554071 23.4459 1.56015 23.7813 2.77035C23.9708 3.45565 24 4.12637 24 4.82625V19.1738C24 19.8882 23.9708 20.5444 23.7813 21.2297C23.4459 22.4253 22.469 23.4168 21.2734 23.7667C20.5881 23.9708 19.932 24 19.1883 24ZM20.9672 22.819C21.842 22.5857 22.5711 21.842 22.8044 20.9964C22.9648 20.4131 22.9939 19.8299 22.9939 19.2175V4.73876C22.9939 4.14095 22.9648 3.61604 22.819 3.04739C22.5857 2.17254 21.8566 1.42892 20.9818 1.18105C20.3985 1.02066 19.8153 0.991495 19.2029 0.991495H4.79708C4.17011 0.991495 3.60146 1.00608 3.01823 1.18105C2.15796 1.41434 1.42892 2.14338 1.19563 3.00365C1.03524 3.58688 1.00608 4.17011 1.00608 4.7825V19.2904C1.00608 19.8736 1.03524 20.4131 1.19563 20.9672C1.4435 21.8275 2.15796 22.5565 3.01823 22.7898C3.60146 22.9502 4.18469 22.9793 4.79708 22.9793H19.2467C19.8299 22.9793 20.3694 22.9648 20.9672 22.7898V22.819Z" fill="#ffffff"/><path d="M19.028 15.4994H5.00127C4.15559 15.4994 3.49945 14.8287 3.49945 13.9976V4.98664C3.49945 4.19927 4.14101 3.49939 4.94295 3.49939H19.0572C19.8737 3.49939 20.5007 4.19927 20.5007 4.98664V13.983C20.5007 14.7849 19.8883 15.4848 19.028 15.4848V15.4994Z" fill="#ffffff"/><path d="M18.9697 20.5006H4.94292C4.09724 20.5006 3.48484 19.757 3.48484 18.9696V17.9344C3.49942 17.147 4.18472 16.5055 4.98666 16.5055H18.9988C19.8591 16.5055 20.5006 17.2053 20.5006 18.0365V19.0134C20.5006 19.8445 19.8445 20.5006 18.9697 20.5006Z" fill="#ffffff"/></svg></button>
+    </div>
+    <div class="result-wrap">
+      <div class="result-score" id="resultScore"></div>
+      <p>правильных ответов из <span id="resultTotal"></span> в разделе «<span id="resultCat"></span>»</p>
+      <div class="result-actions">
+        <button class="nav-btn secondary" onclick="repeatQuiz()">Повторить</button>
+        <button class="nav-btn primary" onclick="goHome()">На главную</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO / EXAMPLES -->
+  <div class="screen" id="screen-info">
+    <div class="topbar">
+      <button class="back-btn" onclick="showScreen('screen-study')">‹</button>
+      <h1 id="infoTitle">Примеры</h1>
+      <button class="home-btn" onclick="goHome()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.1883 24H4.82625C4.11179 24 3.44107 23.9708 2.77035 23.7813C1.56015 23.4459 0.554071 22.4399 0.218712 21.2297C0.0291616 20.5444 0 19.8882 0 19.1738V4.82625C0 4.11179 0.0291616 3.44107 0.218712 2.77035C0.554071 1.54557 1.54557 0.554071 2.75577 0.218712C3.44107 0.0291616 4.11179 0 4.82625 0H19.1738C19.8882 0 20.5589 0.0291616 21.2297 0.218712C22.4399 0.554071 23.4459 1.56015 23.7813 2.77035C23.9708 3.45565 24 4.12637 24 4.82625V19.1738C24 19.8882 23.9708 20.5444 23.7813 21.2297C23.4459 22.4253 22.469 23.4168 21.2734 23.7667C20.5881 23.9708 19.932 24 19.1883 24ZM20.9672 22.819C21.842 22.5857 22.5711 21.842 22.8044 20.9964C22.9648 20.4131 22.9939 19.8299 22.9939 19.2175V4.73876C22.9939 4.14095 22.9648 3.61604 22.819 3.04739C22.5857 2.17254 21.8566 1.42892 20.9818 1.18105C20.3985 1.02066 19.8153 0.991495 19.2029 0.991495H4.79708C4.17011 0.991495 3.60146 1.00608 3.01823 1.18105C2.15796 1.41434 1.42892 2.14338 1.19563 3.00365C1.03524 3.58688 1.00608 4.17011 1.00608 4.7825V19.2904C1.00608 19.8736 1.03524 20.4131 1.19563 20.9672C1.4435 21.8275 2.15796 22.5565 3.01823 22.7898C3.60146 22.9502 4.18469 22.9793 4.79708 22.9793H19.2467C19.8299 22.9793 20.3694 22.9648 20.9672 22.7898V22.819Z" fill="#ffffff"/><path d="M19.028 15.4994H5.00127C4.15559 15.4994 3.49945 14.8287 3.49945 13.9976V4.98664C3.49945 4.19927 4.14101 3.49939 4.94295 3.49939H19.0572C19.8737 3.49939 20.5007 4.19927 20.5007 4.98664V13.983C20.5007 14.7849 19.8883 15.4848 19.028 15.4848V15.4994Z" fill="#ffffff"/><path d="M18.9697 20.5006H4.94292C4.09724 20.5006 3.48484 19.757 3.48484 18.9696V17.9344C3.49942 17.147 4.18472 16.5055 4.98666 16.5055H18.9988C19.8591 16.5055 20.5006 17.2053 20.5006 18.0365V19.0134C20.5006 19.8445 19.8445 20.5006 18.9697 20.5006Z" fill="#ffffff"/></svg></button>
+    </div>
+    <div class="info-body" id="infoBody"></div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- ICONS ---------- */
+const ICONS = {
+  'action-sheets': `
+    <rect x="60" y="35" width="340" height="230" rx="20" fill="rgba(255,255,255,0.92)"/>
+    <text x="88" y="82" font-size="22" font-weight="700" fill="#7a2e20" font-family="-apple-system,sans-serif">Action Title</text>
+    <text x="88" y="108" font-size="14" fill="#a15038" font-family="-apple-system,sans-serif">A short description of the action.</text>
+    <rect x="88" y="140" width="284" height="38" rx="19" fill="#f4c3b2"/>
+    <text x="230" y="164" font-size="15" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Action 1</text>
+    <rect x="88" y="188" width="284" height="38" rx="19" fill="#f4c3b2"/>
+    <text x="230" y="212" font-size="15" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Action 2</text>
+  `,
+  'alerts': `
+    <rect x="60" y="55" width="340" height="190" rx="20" fill="rgba(255,255,255,0.92)"/>
+    <text x="88" y="100" font-size="22" font-weight="700" fill="#7a2e20" font-family="-apple-system,sans-serif">Alert Title</text>
+    <text x="88" y="128" font-size="14" fill="#a15038" font-family="-apple-system,sans-serif">Alert description</text>
+    <rect x="88" y="168" width="150" height="42" rx="21" fill="#f4c3b2"/>
+    <text x="163" y="194" font-size="15" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Secondary</text>
+    <rect x="252" y="168" width="120" height="42" rx="21" fill="#a5271b"/>
+    <text x="312" y="194" font-size="15" fill="#ffffff" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="700">Primary</text>
+  `,
+  'page-controls': `
+    <circle cx="140" cy="150" r="11" fill="rgba(255,255,255,0.55)"/>
+    <circle cx="185" cy="150" r="11" fill="rgba(255,255,255,0.55)"/>
+    <circle cx="230" cy="150" r="15" fill="#3a0f08"/>
+    <circle cx="275" cy="150" r="11" fill="rgba(255,255,255,0.55)"/>
+    <circle cx="320" cy="150" r="11" fill="rgba(255,255,255,0.55)"/>
+  `,
+  'panels': `
+    <rect x="70" y="45" width="320" height="210" rx="14" fill="#4a1710"/>
+    <rect x="70" y="45" width="320" height="36" rx="14" fill="#5c1f16"/>
+    <rect x="70" y="63" width="320" height="18" fill="#5c1f16"/>
+    <circle cx="94" cy="63" r="9" fill="rgba(255,255,255,0.7)"/>
+    <text x="94" y="68" font-size="12" fill="#4a1710" text-anchor="middle" font-family="-apple-system,sans-serif">✕</text>
+  `,
+  'popovers': `
+    <path d="M230 40 L250 68 L360 68 A18 18 0 0 1 378 86 L378 216 A18 18 0 0 1 360 234 L100 234 A18 18 0 0 1 82 216 L82 86 A18 18 0 0 1 100 68 L210 68 Z" fill="rgba(255,255,255,0.92)"/>
+  `,
+  'scroll-views': `
+    <rect x="60" y="45" width="320" height="210" rx="16" fill="rgba(255,255,255,0.92)"/>
+    <rect x="82" y="67" width="240" height="166" rx="8" fill="#f4c3b2"/>
+    <circle cx="150" cy="115" r="18" fill="#c2503c"/>
+    <path d="M100 205 L170 145 L220 185 L280 125 L302 205 Z" fill="#c2503c"/>
+    <rect x="358" y="65" width="9" height="150" rx="4.5" fill="#7a2e20"/>
+  `,
+  'sheets': `
+    <rect x="50" y="35" width="360" height="230" rx="16" fill="rgba(255,255,255,0.35)"/>
+    <circle cx="78" cy="58" r="6" fill="rgba(255,255,255,0.75)"/>
+    <circle cx="98" cy="58" r="6" fill="rgba(255,255,255,0.75)"/>
+    <circle cx="118" cy="58" r="6" fill="rgba(255,255,255,0.75)"/>
+    <path d="M96 258 L96 130 Q96 108 118 108 L342 108 Q364 108 364 130 L364 258 Z" fill="rgba(255,255,255,0.95)"/>
+    <rect x="205" y="122" width="50" height="6" rx="3" fill="#e8c4b6"/>
+  `,
+  'windows': `
+    <rect x="50" y="45" width="360" height="210" rx="14" fill="rgba(255,255,255,0.35)"/>
+    <circle cx="76" cy="66" r="6" fill="rgba(255,255,255,0.8)"/>
+    <circle cx="96" cy="66" r="6" fill="rgba(255,255,255,0.8)"/>
+    <circle cx="116" cy="66" r="6" fill="rgba(255,255,255,0.8)"/>
+    <rect x="50" y="82" width="96" height="173" fill="rgba(255,255,255,0.55)"/>
+    <circle cx="185" cy="107" r="10" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="222" cy="107" r="10" fill="rgba(255,255,255,0.9)"/>
+    <rect x="252" y="97" width="64" height="20" rx="10" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="345" cy="107" r="10" fill="rgba(255,255,255,0.9)"/>
+  `,
+  'charts': `
+    <rect x="60" y="50" width="340" height="200" rx="16" fill="rgba(255,255,255,0.92)"/>
+    <rect x="95" y="170" width="30" height="55" rx="4" fill="#f4c3b2"/>
+    <rect x="140" y="140" width="30" height="85" rx="4" fill="#f4c3b2"/>
+    <rect x="185" y="100" width="30" height="125" rx="4" fill="#c2503c"/>
+    <rect x="230" y="155" width="30" height="70" rx="4" fill="#f4c3b2"/>
+    <rect x="275" y="120" width="30" height="105" rx="4" fill="#f4c3b2"/>
+    <rect x="320" y="90" width="30" height="135" rx="4" fill="#f4c3b2"/>
+  `,
+  'image-views': `
+    <rect x="70" y="55" width="320" height="190" rx="16" fill="rgba(255,255,255,0.92)"/>
+    <circle cx="150" cy="105" r="16" fill="#f4c3b2"/>
+    <path d="M100 205 L170 135 L215 175 L270 115 L330 205 Z" fill="#c2503c"/>
+  `,
+  'text-views': `
+    <rect x="70" y="50" width="320" height="200" rx="16" fill="rgba(255,255,255,0.92)"/>
+    <rect x="95" y="80" width="270" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="95" y="105" width="230" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="95" y="130" width="250" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="95" y="155" width="120" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="220" y="150" width="3" height="20" fill="#a5271b"/>
+  `,
+  'web-views': `
+    <rect x="60" y="45" width="340" height="210" rx="14" fill="rgba(255,255,255,0.92)"/>
+    <circle cx="88" cy="68" r="6" fill="#f4c3b2"/>
+    <circle cx="108" cy="68" r="6" fill="#f4c3b2"/>
+    <circle cx="128" cy="68" r="6" fill="#f4c3b2"/>
+    <path d="M175 68 l-10 8 l10 8" stroke="#a5271b" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M200 68 l10 8 l-10 8" stroke="#a5271b" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="225" y="60" width="140" height="18" rx="9" fill="#f4c3b2"/>
+    <rect x="85" y="100" width="290" height="130" rx="8" fill="#f4c3b2" opacity="0.6"/>
+  `,
+  'boxes': `
+    <rect x="70" y="55" width="320" height="190" rx="14" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="4"/>
+    <rect x="70" y="55" width="320" height="34" rx="14" fill="rgba(255,255,255,0.9)"/>
+    <text x="90" y="78" font-size="14" font-weight="700" fill="#7a2e20" font-family="-apple-system,sans-serif">Section Title</text>
+    <rect x="95" y="115" width="270" height="10" rx="5" fill="rgba(255,255,255,0.7)"/>
+    <rect x="95" y="140" width="230" height="10" rx="5" fill="rgba(255,255,255,0.7)"/>
+  `,
+  'collections': `
+    <rect x="70" y="60" width="90" height="80" rx="10" fill="rgba(255,255,255,0.92)"/>
+    <rect x="175" y="60" width="90" height="80" rx="10" fill="rgba(255,255,255,0.92)"/>
+    <rect x="280" y="60" width="90" height="80" rx="10" fill="rgba(255,255,255,0.92)"/>
+    <rect x="70" y="155" width="90" height="80" rx="10" fill="rgba(255,255,255,0.92)"/>
+    <rect x="175" y="155" width="90" height="80" rx="10" fill="rgba(255,255,255,0.92)"/>
+    <rect x="280" y="155" width="90" height="80" rx="10" fill="rgba(255,255,255,0.92)"/>
+  `,
+  'disclosure-controls': `
+    <path d="M95 90 l14 10 l-14 10 Z" fill="rgba(255,255,255,0.95)"/>
+    <text x="125" y="103" font-size="16" font-weight="700" fill="#ffffff" font-family="-apple-system,sans-serif">Advanced Options</text>
+    <rect x="115" y="130" width="260" height="10" rx="5" fill="rgba(255,255,255,0.55)"/>
+    <rect x="115" y="155" width="220" height="10" rx="5" fill="rgba(255,255,255,0.55)"/>
+    <rect x="115" y="180" width="240" height="10" rx="5" fill="rgba(255,255,255,0.55)"/>
+  `,
+  'labels': `
+    <text x="230" y="140" font-size="34" font-weight="800" fill="rgba(255,255,255,0.95)" text-anchor="middle" font-family="-apple-system,sans-serif">Label</text>
+    <rect x="150" y="170" width="160" height="30" rx="15" fill="rgba(255,255,255,0.3)"/>
+    <text x="230" y="191" font-size="14" fill="#ffffff" text-anchor="middle" font-family="-apple-system,sans-serif">uneditable text</text>
+  `,
+  'lists-and-tables': `
+    <rect x="60" y="50" width="340" height="200" rx="16" fill="rgba(255,255,255,0.92)"/>
+    <circle cx="95" cy="85" r="14" fill="#c2503c"/>
+    <rect x="120" y="78" width="180" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="120" y="93" width="120" height="7" rx="3" fill="#c98d78"/>
+    <path d="M355 78 l10 8 l-10 8" stroke="#c2503c" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="90" y1="115" x2="370" y2="115" stroke="#f0dcd2" stroke-width="2"/>
+    <circle cx="95" cy="145" r="14" fill="#c2503c"/>
+    <rect x="120" y="138" width="180" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="120" y="153" width="120" height="7" rx="3" fill="#c98d78"/>
+    <path d="M355 138 l10 8 l-10 8" stroke="#c2503c" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="90" y1="175" x2="370" y2="175" stroke="#f0dcd2" stroke-width="2"/>
+    <circle cx="95" cy="205" r="14" fill="#c2503c"/>
+    <rect x="120" y="198" width="180" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="120" y="213" width="120" height="7" rx="3" fill="#c98d78"/>
+    <path d="M355 198 l10 8 l-10 8" stroke="#c2503c" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+  'split-views': `
+    <rect x="60" y="50" width="340" height="200" rx="14" fill="rgba(255,255,255,0.92)"/>
+    <line x1="170" y1="50" x2="170" y2="250" stroke="#f0dcd2" stroke-width="3"/>
+    <line x1="280" y1="50" x2="280" y2="250" stroke="#f0dcd2" stroke-width="3"/>
+    <rect x="80" y="70" width="70" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="80" y="90" width="70" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="190" y="70" width="70" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="190" y="90" width="70" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="300" y="70" width="70" height="60" rx="8" fill="#f4c3b2"/>
+  `,
+  'activity-views': `
+    <rect x="60" y="45" width="340" height="210" rx="16" fill="rgba(255,255,255,0.35)"/>
+    <circle cx="100" cy="80" r="20" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="160" cy="80" r="20" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="220" cy="80" r="20" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="280" cy="80" r="20" fill="rgba(255,255,255,0.9)"/>
+    <circle cx="340" cy="80" r="20" fill="rgba(255,255,255,0.9)"/>
+    <rect x="85" y="130" width="290" height="34" rx="10" fill="rgba(255,255,255,0.9)"/>
+    <rect x="85" y="172" width="290" height="34" rx="10" fill="rgba(255,255,255,0.9)"/>
+    <rect x="85" y="214" width="290" height="34" rx="10" fill="rgba(255,255,255,0.9)"/>
+  `,
+  'buttons': `
+    <rect x="120" y="120" width="220" height="56" rx="28" fill="rgba(255,255,255,0.95)"/>
+    <text x="230" y="156" font-size="20" font-weight="700" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif">Button</text>
+  `,
+  'context-menus': `
+    <rect x="150" y="60" width="200" height="140" rx="14" fill="rgba(255,255,255,0.95)"/>
+    <rect x="170" y="80" width="140" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="170" y="110" width="140" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="170" y="140" width="100" height="9" rx="4" fill="#c2503c"/>
+    <circle cx="120" cy="230" r="14" fill="rgba(255,255,255,0.6)"/>
+  `,
+  'edit-menus': `
+    <path d="M110 130 L230 90 L350 130 A14 14 0 0 1 350 155 L110 155 A14 14 0 0 1 110 130 Z" fill="rgba(255,255,255,0.95)"/>
+    <text x="150" y="145" font-size="13" font-weight="600" fill="#7a2e20" font-family="-apple-system,sans-serif">Cut</text>
+    <line x1="185" y1="120" x2="185" y2="150" stroke="#e8c4b6" stroke-width="2"/>
+    <text x="205" y="145" font-size="13" font-weight="600" fill="#7a2e20" font-family="-apple-system,sans-serif">Copy</text>
+    <line x1="255" y1="120" x2="255" y2="150" stroke="#e8c4b6" stroke-width="2"/>
+    <text x="275" y="145" font-size="13" font-weight="600" fill="#7a2e20" font-family="-apple-system,sans-serif">Paste</text>
+  `,
+  'home-screen-quick-actions': `
+    <rect x="180" y="150" width="70" height="70" rx="18" fill="rgba(255,255,255,0.95)"/>
+    <rect x="120" y="60" width="220" height="80" rx="14" fill="rgba(255,255,255,0.95)"/>
+    <rect x="140" y="80" width="140" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="140" y="100" width="140" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="140" y="120" width="100" height="9" rx="4" fill="#c2503c"/>
+  `,
+  'menus': `
+    <rect x="130" y="55" width="200" height="42" rx="10" fill="rgba(255,255,255,0.95)"/>
+    <text x="150" y="82" font-size="15" font-weight="600" fill="#7a2e20" font-family="-apple-system,sans-serif">Menu ▾</text>
+    <rect x="130" y="100" width="200" height="150" rx="10" fill="rgba(255,255,255,0.95)"/>
+    <rect x="130" y="100" width="200" height="30" fill="#f4c3b2"/>
+    <text x="145" y="120" font-size="13" fill="#7a2e20" font-family="-apple-system,sans-serif">Option 1</text>
+    <text x="145" y="152" font-size="13" fill="#7a2e20" font-family="-apple-system,sans-serif">Option 2</text>
+    <text x="145" y="184" font-size="13" fill="#7a2e20" font-family="-apple-system,sans-serif">Option 3</text>
+    <text x="145" y="216" font-size="13" fill="#7a2e20" font-family="-apple-system,sans-serif">Option 4</text>
+  `,
+  'pop-up-buttons': `
+    <rect x="110" y="130" width="240" height="46" rx="23" fill="rgba(255,255,255,0.95)"/>
+    <text x="200" y="160" font-size="16" font-weight="600" fill="#7a2e20" font-family="-apple-system,sans-serif">Medium</text>
+    <path d="M300 148 l10 12 l10 -12" stroke="#7a2e20" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+  'pull-down-buttons': `
+    <rect x="140" y="70" width="180" height="44" rx="22" fill="rgba(255,255,255,0.95)"/>
+    <text x="165" y="98" font-size="16" font-weight="600" fill="#7a2e20" font-family="-apple-system,sans-serif">Sort by ▾</text>
+    <rect x="140" y="125" width="180" height="110" rx="10" fill="rgba(255,255,255,0.9)"/>
+    <text x="160" y="150" font-size="13" fill="#7a2e20" font-family="-apple-system,sans-serif">Name</text>
+    <text x="160" y="178" font-size="13" fill="#7a2e20" font-family="-apple-system,sans-serif">Date</text>
+    <text x="160" y="206" font-size="13" fill="#c2503c" font-family="-apple-system,sans-serif">Size ✓</text>
+  `,
+  'the-menu-bar': `
+    <rect x="60" y="60" width="340" height="30" rx="8" fill="rgba(255,255,255,0.95)"/>
+    <text x="80" y="80" font-size="13" font-weight="600" fill="#7a2e20" font-family="-apple-system,sans-serif">File  Edit  View  Window</text>
+    <rect x="60" y="100" width="340" height="150" rx="10" fill="rgba(255,255,255,0.25)"/>
+  `,
+  'toolbars': `
+    <rect x="80" y="60" width="300" height="90" rx="10" fill="rgba(255,255,255,0.3)"/>
+    <rect x="60" y="180" width="340" height="60" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="120" cy="210" r="14" fill="#c2503c"/>
+    <circle cx="190" cy="210" r="14" fill="#c2503c"/>
+    <circle cx="260" cy="210" r="14" fill="#c2503c"/>
+    <circle cx="330" cy="210" r="14" fill="#c2503c"/>
+  `,
+  'search-fields': `
+    <rect x="90" y="120" width="280" height="46" rx="23" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="125" cy="143" r="9" fill="none" stroke="#7a2e20" stroke-width="3"/>
+    <line x1="132" y1="150" x2="140" y2="158" stroke="#7a2e20" stroke-width="3" stroke-linecap="round"/>
+    <text x="155" y="149" font-size="15" fill="#a15038" font-family="-apple-system,sans-serif">Search</text>
+  `,
+  'tab-bars': `
+    <rect x="60" y="190" width="340" height="60" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="120" cy="212" r="10" fill="#c9a293"/>
+    <circle cx="195" cy="212" r="10" fill="#c2503c"/>
+    <circle cx="270" cy="212" r="10" fill="#c9a293"/>
+    <circle cx="340" cy="212" r="10" fill="#c9a293"/>
+    <text x="195" y="240" font-size="10" fill="#c2503c" text-anchor="middle" font-family="-apple-system,sans-serif">Home</text>
+  `,
+  'color-wells': `
+    <rect x="150" y="90" width="34" height="90" fill="#ff6b6b"/>
+    <rect x="184" y="90" width="34" height="90" fill="#ffb86b"/>
+    <rect x="218" y="90" width="34" height="90" fill="#ffe66b"/>
+    <rect x="252" y="90" width="34" height="90" fill="#6bff9e"/>
+    <rect x="286" y="90" width="34" height="90" fill="#6bb6ff"/>
+    <rect x="150" y="90" width="170" height="90" rx="14" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="5"/>
+  `,
+  'pickers': `
+    <rect x="80" y="70" width="300" height="160" rx="14" fill="rgba(255,255,255,0.92)"/>
+    <rect x="80" y="130" width="300" height="40" fill="#f4c3b2"/>
+    <text x="140" y="115" font-size="13" fill="#c9a293" text-anchor="middle" font-family="-apple-system,sans-serif">12</text>
+    <text x="140" y="155" font-size="16" font-weight="700" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif">1</text>
+    <text x="140" y="195" font-size="13" fill="#c9a293" text-anchor="middle" font-family="-apple-system,sans-serif">2</text>
+    <text x="230" y="115" font-size="13" fill="#c9a293" text-anchor="middle" font-family="-apple-system,sans-serif">30</text>
+    <text x="230" y="155" font-size="16" font-weight="700" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif">45</text>
+    <text x="230" y="195" font-size="13" fill="#c9a293" text-anchor="middle" font-family="-apple-system,sans-serif">00</text>
+    <text x="320" y="155" font-size="16" font-weight="700" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif">PM</text>
+  `,
+  'segmented-controls': `
+    <rect x="90" y="130" width="280" height="44" rx="12" fill="rgba(255,255,255,0.4)"/>
+    <rect x="184" y="134" width="92" height="36" rx="9" fill="rgba(255,255,255,0.95)"/>
+    <text x="140" y="157" font-size="13" fill="#ffffff" text-anchor="middle" font-family="-apple-system,sans-serif">Day</text>
+    <text x="230" y="157" font-size="13" font-weight="700" fill="#7a2e20" text-anchor="middle" font-family="-apple-system,sans-serif">Week</text>
+    <text x="320" y="157" font-size="13" fill="#ffffff" text-anchor="middle" font-family="-apple-system,sans-serif">Month</text>
+  `,
+  'sliders': `
+    <rect x="90" y="145" width="280" height="8" rx="4" fill="rgba(255,255,255,0.35)"/>
+    <rect x="90" y="145" width="170" height="8" rx="4" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="260" cy="149" r="16" fill="#ffffff"/>
+  `,
+  'steppers': `
+    <rect x="170" y="120" width="120" height="50" rx="12" fill="rgba(255,255,255,0.95)"/>
+    <line x1="185" y1="145" x2="205" y2="145" stroke="#7a2e20" stroke-width="4" stroke-linecap="round"/>
+    <line x1="230" y1="120" x2="230" y2="170" stroke="#e8c4b6" stroke-width="2"/>
+    <line x1="255" y1="145" x2="275" y2="145" stroke="#7a2e20" stroke-width="4" stroke-linecap="round"/>
+    <line x1="265" y1="135" x2="265" y2="155" stroke="#7a2e20" stroke-width="4" stroke-linecap="round"/>
+  `,
+  'text-fields': `
+    <rect x="90" y="128" width="280" height="46" rx="12" fill="rgba(255,255,255,0.95)"/>
+    <text x="110" y="157" font-size="15" fill="#c9a293" font-family="-apple-system,sans-serif">Email</text>
+    <rect x="335" y="138" width="3" height="26" fill="#a5271b"/>
+  `,
+  'toggles': `
+    <rect x="180" y="125" width="90" height="50" rx="25" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="245" cy="150" r="20" fill="#c2503c"/>
+  `,
+  'virtual-keyboards': `
+    <rect x="60" y="70" width="340" height="150" rx="14" fill="rgba(255,255,255,0.92)"/>
+    <rect x="75" y="85" width="310" height="26" rx="6" fill="#f4c3b2" opacity="0.9"/>
+    <rect x="75" y="118" width="280" height="26" rx="6" fill="#f4c3b2" opacity="0.7"/>
+    <rect x="75" y="151" width="310" height="26" rx="6" fill="#f4c3b2" opacity="0.9"/>
+    <rect x="75" y="184" width="200" height="26" rx="6" fill="#e8c4b6" opacity="0.9"/>
+  `,
+  'activity-rings': `
+    <circle cx="230" cy="150" r="85" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="18"/>
+    <circle cx="230" cy="150" r="85" fill="none" stroke="#ffffff" stroke-width="18" stroke-dasharray="534" stroke-dashoffset="120" transform="rotate(-90 230 150)"/>
+    <circle cx="230" cy="150" r="60" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="18"/>
+    <circle cx="230" cy="150" r="60" fill="none" stroke="#ffe66b" stroke-width="18" stroke-dasharray="377" stroke-dashoffset="60" transform="rotate(-90 230 150)"/>
+    <circle cx="230" cy="150" r="35" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="18"/>
+    <circle cx="230" cy="150" r="35" fill="none" stroke="#6bff9e" stroke-width="18" stroke-dasharray="220" stroke-dashoffset="30" transform="rotate(-90 230 150)"/>
+  `,
+  'gauges': `
+    <path d="M110 190 A120 120 0 0 1 350 190" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="20" stroke-linecap="round"/>
+    <path d="M110 190 A120 120 0 0 1 280 90" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round"/>
+    <circle cx="280" cy="90" r="10" fill="#ffe66b"/>
+  `,
+  'progress-indicators': `
+    <circle cx="150" cy="130" r="35" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="8"/>
+    <path d="M150 95 A35 35 0 0 1 185 130" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+    <rect x="220" y="120" width="150" height="14" rx="7" fill="rgba(255,255,255,0.3)"/>
+    <rect x="220" y="120" width="90" height="14" rx="7" fill="#ffffff"/>
+  `,
+  'app-shortcuts': `
+    <circle cx="130" cy="130" r="40" fill="none" stroke="#ffffff" stroke-width="6"/>
+    <circle cx="130" cy="130" r="26" fill="rgba(255,255,255,0.4)"/>
+    <rect x="200" y="100" width="160" height="14" rx="7" fill="rgba(255,255,255,0.9)"/>
+    <rect x="200" y="125" width="160" height="14" rx="7" fill="rgba(255,255,255,0.6)"/>
+    <rect x="200" y="150" width="120" height="14" rx="7" fill="rgba(255,255,255,0.6)"/>
+  `,
+  'controls': `
+    <rect x="150" y="90" width="160" height="120" rx="20" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="230" cy="150" r="30" fill="#c2503c"/>
+    <path d="M220 150 l7 7 l15 -18" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+  'live-activities': `
+    <rect x="120" y="120" width="220" height="50" rx="25" fill="rgba(0,0,0,0.85)"/>
+    <circle cx="155" cy="145" r="14" fill="#ffffff"/>
+    <rect x="185" y="135" width="90" height="8" rx="4" fill="#ffffff"/>
+    <rect x="185" y="150" width="60" height="6" rx="3" fill="rgba(255,255,255,0.6)"/>
+    <circle cx="305" cy="145" r="14" fill="#ffe66b"/>
+  `,
+  'notifications': `
+    <rect x="70" y="80" width="320" height="90" rx="18" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="105" cy="110" r="16" fill="#c2503c"/>
+    <rect x="135" y="98" width="140" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="135" y="115" width="220" height="8" rx="4" fill="#a15038"/>
+    <rect x="135" y="132" width="180" height="8" rx="4" fill="#c9a293"/>
+    <text x="340" y="103" font-size="10" fill="#c9a293" font-family="-apple-system,sans-serif">now</text>
+  `,
+  'snippets': `
+    <rect x="140" y="100" width="180" height="100" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="180" cy="135" r="16" fill="#c2503c"/>
+    <rect x="210" y="128" width="90" height="9" rx="4" fill="#7a2e20"/>
+    <rect x="160" y="165" width="140" height="16" rx="8" fill="#f4c3b2"/>
+  `,
+  'status-bars': `
+    <rect x="60" y="60" width="340" height="26" rx="8" fill="rgba(255,255,255,0.95)"/>
+    <text x="80" y="79" font-size="13" font-weight="700" fill="#7a2e20" font-family="-apple-system,sans-serif">9:41</text>
+    <rect x="330" y="68" width="26" height="12" rx="3" fill="none" stroke="#7a2e20" stroke-width="2"/>
+    <rect x="333" y="70" width="16" height="8" fill="#7a2e20"/>
+    <rect x="60" y="100" width="340" height="150" rx="10" fill="rgba(255,255,255,0.25)"/>
+  `,
+  'widgets': `
+    <rect x="150" y="70" width="160" height="160" rx="26" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="185" cy="105" r="14" fill="#c2503c"/>
+    <rect x="170" y="130" width="100" height="10" rx="5" fill="#7a2e20"/>
+    <rect x="170" y="148" width="70" height="8" rx="4" fill="#a15038"/>
+    <rect x="170" y="180" width="120" height="30" rx="8" fill="#f4c3b2"/>
+  `,
+  'accessibility': `
+    <circle cx="230" cy="150" r="75" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="10"/>
+    <circle cx="230" cy="103" r="15" fill="#ffffff"/>
+    <line x1="230" y1="122" x2="230" y2="178" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+    <line x1="192" y1="145" x2="268" y2="145" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+    <line x1="230" y1="178" x2="203" y2="212" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+    <line x1="230" y1="178" x2="257" y2="212" stroke="#ffffff" stroke-width="10" stroke-linecap="round"/>
+  `,
+  'app-icons': `
+    <rect x="170" y="80" width="120" height="120" rx="28" fill="rgba(255,255,255,0.4)"/>
+    <rect x="150" y="100" width="120" height="120" rx="28" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="210" cy="160" r="26" fill="#c2503c"/>
+  `,
+  'branding': `
+    <circle cx="180" cy="150" r="55" fill="rgba(255,255,255,0.95)"/>
+    <text x="180" y="168" font-size="46" font-weight="800" fill="#c2503c" text-anchor="middle" font-family="-apple-system,sans-serif">A</text>
+    <rect x="255" y="130" width="120" height="10" rx="5" fill="rgba(255,255,255,0.7)"/>
+    <rect x="255" y="155" width="90" height="10" rx="5" fill="rgba(255,255,255,0.5)"/>
+  `,
+  'color': `
+    <circle cx="180" cy="150" r="30" fill="#ff6b6b"/>
+    <circle cx="240" cy="115" r="30" fill="#ffb86b"/>
+    <circle cx="300" cy="150" r="30" fill="#ffe66b"/>
+    <circle cx="270" cy="205" r="30" fill="#6bff9e"/>
+    <circle cx="200" cy="205" r="30" fill="#6bb6ff"/>
+  `,
+  'dark-mode': `
+    <rect x="70" y="60" width="320" height="180" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <rect x="230" y="60" width="160" height="180" rx="16" fill="#1c1c1e"/>
+    <circle cx="150" cy="150" r="30" fill="#ffe66b"/>
+    <path d="M300 128 a26 26 0 1 0 22 42 a34 34 0 1 1 -22 -42 Z" fill="#ffffff"/>
+  `,
+  'icons': `
+    <circle cx="150" cy="115" r="30" fill="rgba(255,255,255,0.95)"/>
+    <path d="M150 97 l7 15 l16 2 l-12 11 l3 16 l-14 -8 l-14 8 l3 -16 l-12 -11 l16 -2 Z" fill="#c2503c"/>
+    <circle cx="310" cy="115" r="30" fill="rgba(255,255,255,0.95)"/>
+    <path d="M310 133 C290 117 294 97 310 105 C326 97 330 117 310 133 Z" fill="#c2503c"/>
+    <circle cx="230" cy="205" r="30" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="230" cy="205" r="13" fill="none" stroke="#c2503c" stroke-width="5"/>
+  `,
+  'images': `
+    <rect x="70" y="55" width="320" height="190" rx="16" fill="rgba(255,255,255,0.92)"/>
+    <circle cx="150" cy="105" r="16" fill="#f4c3b2"/>
+    <path d="M100 205 L170 135 L215 175 L270 115 L330 205 Z" fill="#c2503c"/>
+    <text x="230" y="272" font-size="15" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="-apple-system,sans-serif">1x   2x   3x</text>
+  `,
+  'inclusion': `
+    <circle cx="150" cy="150" r="22" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="230" cy="105" r="22" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="310" cy="150" r="22" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="230" cy="195" r="22" fill="rgba(255,255,255,0.95)"/>
+    <line x1="150" y1="150" x2="230" y2="105" stroke="rgba(255,255,255,0.5)" stroke-width="4"/>
+    <line x1="230" y1="105" x2="310" y2="150" stroke="rgba(255,255,255,0.5)" stroke-width="4"/>
+    <line x1="310" y1="150" x2="230" y2="195" stroke="rgba(255,255,255,0.5)" stroke-width="4"/>
+    <line x1="230" y1="195" x2="150" y2="150" stroke="rgba(255,255,255,0.5)" stroke-width="4"/>
+  `,
+  'layout': `
+    <rect x="70" y="50" width="320" height="200" rx="14" fill="rgba(255,255,255,0.92)"/>
+    <rect x="95" y="75" width="270" height="40" rx="6" fill="#f4c3b2"/>
+    <rect x="95" y="130" width="125" height="90" rx="6" fill="#f4c3b2" opacity="0.7"/>
+    <rect x="240" y="130" width="125" height="90" rx="6" fill="#f4c3b2" opacity="0.7"/>
+  `,
+  'materials': `
+    <rect x="90" y="90" width="200" height="140" rx="18" fill="rgba(255,255,255,0.25)"/>
+    <rect x="130" y="70" width="200" height="140" rx="18" fill="rgba(255,255,255,0.55)"/>
+    <rect x="170" y="50" width="200" height="140" rx="18" fill="rgba(255,255,255,0.92)"/>
+  `,
+  'motion': `
+    <circle cx="320" cy="150" r="24" fill="#ffffff"/>
+    <path d="M120 150 Q200 90 300 150" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 14"/>
+  `,
+  'privacy': `
+    <path d="M230 55 L330 90 L330 160 C330 210 285 240 230 255 C175 240 130 210 130 160 L130 90 Z" fill="rgba(255,255,255,0.95)"/>
+    <path d="M195 155 l25 25 l45 -55" stroke="#c2503c" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+  'right-to-left': `
+    <text x="130" y="178" font-size="64" font-weight="800" fill="rgba(255,255,255,0.95)" font-family="-apple-system,sans-serif">A</text>
+    <path d="M210 150 L250 150" stroke="rgba(255,255,255,0.6)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M250 150 l-14 -10 M250 150 l-14 10" stroke="rgba(255,255,255,0.6)" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M210 150 l14 -10 M210 150 l14 10" stroke="rgba(255,255,255,0.6)" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <text x="290" y="178" font-size="64" font-weight="800" fill="rgba(255,255,255,0.95)" font-family="-apple-system,sans-serif">ب</text>
+  `,
+  'sf-symbols': `
+    <rect x="110" y="80" width="70" height="70" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <path d="M145 95 l8 17 l19 3 l-14 13 l3 19 l-16 -9 l-16 9 l3 -19 l-14 -13 l19 -3 Z" fill="#c2503c"/>
+    <rect x="195" y="80" width="70" height="70" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <path d="M230 132 l14 -30 l-10 0 l6 -20 l-24 34 l10 0 Z" fill="#c2503c"/>
+    <rect x="280" y="80" width="70" height="70" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <path d="M315 100 C298 92 300 118 315 132 C330 118 332 92 315 100 Z" fill="#c2503c"/>
+  `,
+  'typography': `
+    <text x="230" y="178" font-size="90" font-weight="800" fill="rgba(255,255,255,0.95)" text-anchor="middle" font-family="-apple-system,sans-serif">Aa</text>
+    <rect x="120" y="212" width="220" height="8" rx="4" fill="rgba(255,255,255,0.4)"/>
+    <rect x="120" y="212" width="130" height="8" rx="4" fill="rgba(255,255,255,0.9)"/>
+  `,
+  'writing': `
+    <path d="M90 70 L370 70 A16 16 0 0 1 386 86 L386 190 A16 16 0 0 1 370 206 L200 206 L160 240 L165 206 L110 206 A16 16 0 0 1 94 190 L90 86 Z" fill="rgba(255,255,255,0.95)"/>
+    <rect x="115" y="100" width="240" height="9" rx="4" fill="#c2503c"/>
+    <rect x="115" y="125" width="180" height="9" rx="4" fill="#e8c4b6"/>
+    <rect x="115" y="150" width="210" height="9" rx="4" fill="#e8c4b6"/>
+  `,
+  'charting-data': `
+    <rect x="60" y="50" width="340" height="200" rx="16" fill="rgba(255,255,255,0.92)"/>
+    <path d="M90 200 L160 150 L220 180 L290 110 L370 130" fill="none" stroke="#c2503c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="90" cy="200" r="8" fill="#c2503c"/>
+    <circle cx="160" cy="150" r="8" fill="#c2503c"/>
+    <circle cx="220" cy="180" r="8" fill="#c2503c"/>
+    <circle cx="290" cy="110" r="8" fill="#c2503c"/>
+    <circle cx="370" cy="130" r="8" fill="#c2503c"/>
+  `,
+  'collaboration-and-sharing': `
+    <circle cx="180" cy="140" r="40" fill="rgba(255,255,255,0.6)"/>
+    <circle cx="260" cy="160" r="40" fill="rgba(255,255,255,0.95)"/>
+    <path d="M300 100 l25 -20 l0 40 Z" fill="#ffffff"/>
+    <path d="M270 90 Q300 80 325 100" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+  `,
+  'drag-and-drop': `
+    <rect x="70" y="90" width="100" height="100" rx="14" fill="rgba(255,255,255,0.95)"/>
+    <rect x="290" y="90" width="100" height="100" rx="14" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="4" stroke-dasharray="10 8"/>
+    <path d="M180 140 L270 140" stroke="rgba(255,255,255,0.8)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M270 140 l-16 -12 M270 140 l-16 12" stroke="rgba(255,255,255,0.8)" stroke-width="6" fill="none" stroke-linecap="round"/>
+  `,
+  'entering-data': `
+    <rect x="80" y="70" width="300" height="40" rx="10" fill="rgba(255,255,255,0.95)"/>
+    <rect x="80" y="130" width="300" height="40" rx="10" fill="rgba(255,255,255,0.95)"/>
+    <rect x="80" y="190" width="180" height="40" rx="10" fill="rgba(255,255,255,0.95)"/>
+    <rect x="100" y="85" width="80" height="9" rx="4" fill="#c9a293"/>
+    <rect x="100" y="145" width="80" height="9" rx="4" fill="#c9a293"/>
+    <rect x="100" y="205" width="60" height="9" rx="4" fill="#c9a293"/>
+  `,
+  'feedback': `
+    <circle cx="230" cy="150" r="70" fill="rgba(255,255,255,0.95)"/>
+    <path d="M195 150 l25 25 l45 -55" stroke="#c2503c" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+  'file-management': `
+    <path d="M80 100 L160 100 L180 80 L380 80 A10 10 0 0 1 390 90 L390 220 A10 10 0 0 1 380 230 L80 230 A10 10 0 0 1 70 220 L70 110 A10 10 0 0 1 80 100 Z" fill="rgba(255,255,255,0.95)"/>
+    <rect x="110" y="140" width="90" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="110" y="165" width="140" height="10" rx="5" fill="#e8c4b6"/>
+  `,
+  'going-full-screen': `
+    <rect x="90" y="70" width="280" height="160" rx="14" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="4"/>
+    <path d="M110 90 L110 110 M110 90 L130 90" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M350 90 L350 110 M350 90 L330 90" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M110 210 L110 190 M110 210 L130 210" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M350 210 L350 190 M350 210 L330 210" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+  'launching': `
+    <rect x="170" y="120" width="120" height="120" rx="28" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="230" cy="180" r="26" fill="#c2503c"/>
+    <path d="M230 70 L230 100 M180 90 L198 112 M280 90 L262 112" stroke="rgba(255,255,255,0.6)" stroke-width="6" stroke-linecap="round"/>
+  `,
+  'live-viewing-apps': `
+    <rect x="80" y="70" width="300" height="170" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <path d="M205 120 L205 190 L265 155 Z" fill="#c2503c"/>
+    <rect x="290" y="90" width="70" height="26" rx="13" fill="#a5271b"/>
+    <text x="325" y="108" font-size="13" font-weight="800" fill="#ffffff" text-anchor="middle" font-family="-apple-system,sans-serif">LIVE</text>
+  `,
+  'loading': `
+    <circle cx="230" cy="150" r="55" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="12"/>
+    <path d="M230 95 A55 55 0 0 1 285 150" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+  `,
+  'managing-accounts': `
+    <circle cx="230" cy="115" r="35" fill="rgba(255,255,255,0.95)"/>
+    <path d="M160 235 Q230 165 300 235 Z" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="310" cy="200" r="20" fill="#a5271b"/>
+    <rect x="304" y="215" width="12" height="20" rx="4" fill="#a5271b"/>
+  `,
+  'managing-notifications': `
+    <path d="M230 80 a15 15 0 0 1 15 15 c30 10 40 40 40 70 l15 20 l-140 0 l15 -20 c0 -30 10 -60 40 -70 a15 15 0 0 1 15 -15 Z" fill="rgba(255,255,255,0.95)"/>
+    <path d="M210 205 a20 20 0 0 0 40 0" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="320" cy="100" r="22" fill="#a5271b"/>
+    <path d="M312 92 l16 16 M328 92 l-16 16" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  `,
+  'modality': `
+    <rect x="60" y="50" width="340" height="200" rx="16" fill="rgba(0,0,0,0.15)"/>
+    <rect x="120" y="95" width="220" height="120" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <rect x="145" y="120" width="140" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="145" y="145" width="100" height="10" rx="5" fill="#e8c4b6"/>
+    <rect x="145" y="185" width="90" height="26" rx="13" fill="#c2503c"/>
+  `,
+  'multitasking': `
+    <rect x="70" y="80" width="220" height="150" rx="14" fill="rgba(255,255,255,0.55)"/>
+    <rect x="150" y="110" width="220" height="150" rx="14" fill="rgba(255,255,255,0.95)"/>
+  `,
+  'offering-help': `
+    <path d="M90 70 L370 70 A16 16 0 0 1 386 86 L386 190 A16 16 0 0 1 370 206 L200 206 L160 240 L165 206 L110 206 A16 16 0 0 1 94 190 L90 86 Z" fill="rgba(255,255,255,0.95)"/>
+    <text x="238" y="165" font-size="70" font-weight="800" fill="#c2503c" text-anchor="middle" font-family="-apple-system,sans-serif">?</text>
+  `,
+  'onboarding': `
+    <rect x="80" y="70" width="300" height="150" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="200" cy="145" r="30" fill="#f4c3b2"/>
+    <circle cx="150" cy="200" r="8" fill="#c2503c"/>
+    <circle cx="180" cy="200" r="8" fill="#c2503c"/>
+    <circle cx="210" cy="200" r="10" fill="#7a2e20"/>
+  `,
+  'playing-audio': `
+    <path d="M150 130 L190 130 L230 95 L230 205 L190 170 L150 170 Z" fill="rgba(255,255,255,0.95)"/>
+    <path d="M255 120 a45 45 0 0 1 0 60" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="M280 100 a75 75 0 0 1 0 100" stroke="rgba(255,255,255,0.5)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  `,
+  'playing-haptics': `
+    <rect x="195" y="80" width="70" height="140" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <circle cx="230" cy="150" r="55" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="6"/>
+    <circle cx="230" cy="150" r="80" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="6"/>
+  `,
+  'playing-video': `
+    <rect x="70" y="70" width="320" height="160" rx="16" fill="rgba(255,255,255,0.95)"/>
+    <path d="M200 115 L200 185 L270 150 Z" fill="#c2503c"/>
+  `,
+  'printing': `
+    <rect x="120" y="110" width="220" height="90" rx="12" fill="rgba(255,255,255,0.95)"/>
+    <rect x="150" y="70" width="160" height="55" rx="8" fill="rgba(255,255,255,0.7)"/>
+    <rect x="150" y="175" width="160" height="70" rx="6" fill="#f4c3b2"/>
+  `,
+  'ratings-and-reviews': `
+    <path d="M115 140 l10 22 l24 3 l-18 17 l4 24 l-20 -11 l-20 11 l4 -24 l-18 -17 l24 -3 Z" fill="#ffffff"/>
+    <path d="M195 140 l10 22 l24 3 l-18 17 l4 24 l-20 -11 l-20 11 l4 -24 l-18 -17 l24 -3 Z" fill="#ffffff"/>
+    <path d="M275 140 l10 22 l24 3 l-18 17 l4 24 l-20 -11 l-20 11 l4 -24 l-18 -17 l24 -3 Z" fill="#ffffff"/>
+    <path d="M355 140 l10 22 l24 3 l-18 17 l4 24 l-20 -11 l-20 11 l4 -24 l-18 -17 l24 -3 Z" fill="rgba(255,255,255,0.4)"/>
+  `,
+  'searching': `
+    <circle cx="200" cy="140" r="60" fill="none" stroke="#ffffff" stroke-width="16"/>
+    <line x1="245" y1="185" x2="310" y2="250" stroke="#ffffff" stroke-width="18" stroke-linecap="round"/>
+  `,
+  'settings': `
+    <circle cx="230" cy="150" r="38" fill="none" stroke="#ffffff" stroke-width="14"/>
+    <circle cx="230" cy="150" r="12" fill="#ffffff"/>
+    <g stroke="#ffffff" stroke-width="14" stroke-linecap="round">
+      <line x1="285" y1="150" x2="300" y2="150"/>
+      <line x1="269" y1="111" x2="279" y2="101"/>
+      <line x1="230" y1="95" x2="230" y2="80"/>
+      <line x1="191" y1="111" x2="181" y2="101"/>
+      <line x1="175" y1="150" x2="160" y2="150"/>
+      <line x1="191" y1="189" x2="181" y2="199"/>
+      <line x1="230" y1="205" x2="230" y2="220"/>
+      <line x1="269" y1="189" x2="279" y2="199"/>
+    </g>
+  `,
+  'undo-and-redo': `
+    <path d="M180 110 A70 70 0 1 1 150 220" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round"/>
+    <path d="M180 80 l0 40 l-40 0 Z" fill="#ffffff"/>
+  `,
+  'workouts': `
+    <circle cx="230" cy="150" r="70" fill="rgba(255,255,255,0.95)"/>
+    <path d="M175 150 L205 150 L220 110 L240 190 L255 150 L285 150" fill="none" stroke="#c2503c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+};
+function iconSvg(id, opacity){
+  return `<svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg">${ICONS[id]}</svg>`;
+}
+function iconSvgFill(id){
+  return `<svg viewBox="0 0 460 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${ICONS[id]}</svg>`;
+}
+
+/* Real flashcard illustrations exported from Figma, used instead of the hand-drawn SVG icon when available */
+const FLASHCARD_IMAGES = {
+  'action-sheets': 'assets/action-sheets-flashcard.png',
+  'alerts': 'assets/alerts-flashcard.png',
+  'toolbars': 'assets/toolbars-flashcard.png',
+  'toggles': 'assets/toggles-flashcard.png',
+  'text-fields': 'assets/text-fields-flashcard.png',
+  'tab-bars': 'assets/tab-bars-flashcard.png',
+  'steppers': 'assets/steppers-flashcard.png',
+  'status-bars': 'assets/status-bars-flashcard.png',
+  'sliders': 'assets/sliders-flashcard.png',
+  'sheets': 'assets/sheets-flashcard.png',
+  'segmented-controls': 'assets/segmented-controls-flashcard.png',
+  'progress-indicators': 'assets/progress-indicators-flashcard.png',
+  'pop-up-buttons': 'assets/pop-up-buttons-flashcard.png',
+  'page-controls': 'assets/page-controls-flashcard.png',
+  'notifications': 'assets/notifications-flashcard.png',
+  'menus': 'assets/menus-flashcard.png',
+  'context-menus': 'assets/context-menus-flashcard.png',
+  'color-wells': 'assets/color-wells-flashcard.png',
+  'buttons': 'assets/buttons-flashcard.png',
+  'activity-views': 'assets/activity-views-flashcard.png',
+  'widgets': 'assets/widgets-flashcard.png',
+  'controls': 'assets/controls-flashcard.png',
+  'lists-and-tables': 'assets/lists-flashcard.png',
+  'virtual-keyboards': 'assets/keyboards-flashcard.png',
+  'pickers': 'assets/pickers-flashcard.png'
+};
+function renderCardVisual(elId, compId){
+  const el = document.getElementById(elId);
+  if(FLASHCARD_IMAGES[compId]){
+    el.classList.add('has-image');
+    el.innerHTML = `<img src="${FLASHCARD_IMAGES[compId]}" alt="${compId}">`;
+  } else {
+    el.classList.remove('has-image');
+    el.innerHTML = iconSvg(compId);
+  }
+}
+
+/* Icons imported from the Figma mockup (Home / HIG-section / Design-system-section badges) */
+const HOME_ICON_SVG = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M19.1883 24H4.82625C4.11179 24 3.44107 23.9708 2.77035 23.7813C1.56015 23.4459 0.554071 22.4399 0.218712 21.2297C0.0291616 20.5444 0 19.8882 0 19.1738V4.82625C0 4.11179 0.0291616 3.44107 0.218712 2.77035C0.554071 1.54557 1.54557 0.554071 2.75577 0.218712C3.44107 0.0291616 4.11179 0 4.82625 0H19.1738C19.8882 0 20.5589 0.0291616 21.2297 0.218712C22.4399 0.554071 23.4459 1.56015 23.7813 2.77035C23.9708 3.45565 24 4.12637 24 4.82625V19.1738C24 19.8882 23.9708 20.5444 23.7813 21.2297C23.4459 22.4253 22.469 23.4168 21.2734 23.7667C20.5881 23.9708 19.932 24 19.1883 24ZM20.9672 22.819C21.842 22.5857 22.5711 21.842 22.8044 20.9964C22.9648 20.4131 22.9939 19.8299 22.9939 19.2175V4.73876C22.9939 4.14095 22.9648 3.61604 22.819 3.04739C22.5857 2.17254 21.8566 1.42892 20.9818 1.18105C20.3985 1.02066 19.8153 0.991495 19.2029 0.991495H4.79708C4.17011 0.991495 3.60146 1.00608 3.01823 1.18105C2.15796 1.41434 1.42892 2.14338 1.19563 3.00365C1.03524 3.58688 1.00608 4.17011 1.00608 4.7825V19.2904C1.00608 19.8736 1.03524 20.4131 1.19563 20.9672C1.4435 21.8275 2.15796 22.5565 3.01823 22.7898C3.60146 22.9502 4.18469 22.9793 4.79708 22.9793H19.2467C19.8299 22.9793 20.3694 22.9648 20.9672 22.7898V22.819Z" fill="#ffffff"/>
+<path d="M19.028 15.4994H5.00127C4.15559 15.4994 3.49945 14.8287 3.49945 13.9976V4.98664C3.49945 4.19927 4.14101 3.49939 4.94295 3.49939H19.0572C19.8737 3.49939 20.5007 4.19927 20.5007 4.98664V13.983C20.5007 14.7849 19.8883 15.4848 19.028 15.4848V15.4994Z" fill="#ffffff"/>
+<path d="M18.9697 20.5006H4.94292C4.09724 20.5006 3.48484 19.757 3.48484 18.9696V17.9344C3.49942 17.147 4.18472 16.5055 4.98666 16.5055H18.9988C19.8591 16.5055 20.5006 17.2053 20.5006 18.0365V19.0134C20.5006 19.8445 19.8445 20.5006 18.9697 20.5006Z" fill="#ffffff"/>
+</svg>`;
+
+const HIG_ICON_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11.5372 20.5909C12.416 21.4211 13.4933 21.7036 14.6535 21.2258C16.0508 20.65 17.4157 20.678 18.8056 21.2638C19.811 21.6875 20.8144 21.5473 21.6004 20.7938C22.3784 20.0481 23.1011 19.2179 23.719 18.331C24.1868 17.6595 24.4516 16.8415 24.8001 16.103C21.4207 14.1299 21.2445 11.0598 24.3844 8.01874C24.0472 7.74307 23.7524 7.49284 23.4482 7.25481C21.5414 5.76314 19.4762 5.83627 17.3872 6.71851C16.7665 6.98056 16.2861 6.96981 15.6776 6.72389C12.0362 5.25087 8.84639 6.95511 8.1715 10.8859C7.51665 14.7002 8.75812 17.9653 11.5372 20.5909Z" fill="#ffffff"/>
+<path d="M21.164 2.21911C21.5484 0.367888 21.4397 0.309454 19.6957 0.682639C17.3471 1.18488 15.9435 3.54372 16.6037 5.76132C18.9245 5.65342 20.7293 4.31304 21.164 2.21911Z" fill="#ffffff"/>
+<path d="M8.79577 31.5V24.9545H9.78334V27.799H13.0465V24.9545H14.0372V31.5H13.0465V28.646H9.78334V31.5H8.79577ZM16.463 24.9545V31.5H15.4755V24.9545H16.463ZM22.3309 27.0224C22.2691 26.8285 22.186 26.6548 22.0816 26.5014C21.9794 26.3459 21.8568 26.2138 21.7141 26.1051C21.5713 25.9943 21.4083 25.9102 21.2251 25.8526C21.044 25.7951 20.8448 25.7663 20.6274 25.7663C20.2588 25.7663 19.9264 25.8612 19.6303 26.0508C19.3341 26.2404 19.0997 26.5185 18.9272 26.8849C18.7567 27.2493 18.6715 27.6957 18.6715 28.2241C18.6715 28.7546 18.7578 29.2031 18.9304 29.5696C19.1029 29.9361 19.3394 30.2141 19.6399 30.4038C19.9403 30.5934 20.2823 30.6882 20.6658 30.6882C21.0216 30.6882 21.3316 30.6158 21.5958 30.4709C21.8622 30.326 22.0678 30.1214 22.2127 29.8572C22.3597 29.5909 22.4332 29.2777 22.4332 28.9176L22.6889 28.9656H20.816V28.1506H23.3888V28.8952C23.3888 29.445 23.2716 29.9222 23.0372 30.3271C22.805 30.7298 22.4833 31.0408 22.072 31.2603C21.663 31.4798 21.1942 31.5895 20.6658 31.5895C20.0735 31.5895 19.5536 31.4531 19.1061 31.1804C18.6608 30.9077 18.3135 30.521 18.0642 30.0202C17.8149 29.5174 17.6903 28.9208 17.6903 28.2305C17.6903 27.7085 17.7627 27.2397 17.9076 26.8242C18.0525 26.4087 18.256 26.0561 18.5181 25.7663C18.7823 25.4744 19.0923 25.2518 19.4481 25.0984C19.8061 24.9428 20.197 24.8651 20.621 24.8651C20.9747 24.8651 21.3039 24.9173 21.6086 25.0217C21.9154 25.1261 22.1882 25.2741 22.4268 25.4659C22.6676 25.6577 22.8668 25.8857 23.0245 26.1499C23.1821 26.4119 23.2887 26.7028 23.3441 27.0224H22.3309Z" fill="#ffffff" fill-opacity="0.9"/>
+</svg>`;
+
+const DESIGN_SYSTEM_ICON_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M19.8867 7.33333C21.9106 7.33333 23.5533 5.69059 23.5533 3.66667C23.5533 1.64275 21.9106 0 19.8867 0H12.5533C10.5294 0 8.88666 1.64275 8.88666 3.66667C8.88666 5.69059 10.5294 7.33333 12.5533 7.33333C10.5294 7.33333 8.88666 8.97608 8.88666 11C8.88666 13.0239 10.5294 14.6667 12.5533 14.6667C10.5294 14.6667 8.88666 16.3094 8.88666 18.3333C8.88666 20.3573 10.5294 22 12.5533 22C14.5772 22 16.22 20.3573 16.22 18.3333V7.33333H19.8867ZM19.8867 7.33333C17.8627 7.33333 16.22 8.97608 16.22 11C16.22 13.0239 17.8627 14.6667 19.8867 14.6667C21.9106 14.6667 23.5533 13.0239 23.5533 11C23.5533 8.97608 21.9106 7.33333 19.8867 7.33333Z" fill="#ffffff"/>
+<path d="M9.6673 31.5V26.5909H10.6229V31.5H9.6673ZM10.1499 25.8335C9.98371 25.8335 9.84095 25.7781 9.72164 25.6673C9.60445 25.5543 9.54585 25.4201 9.54585 25.2646C9.54585 25.1069 9.60445 24.9727 9.72164 24.8619C9.84095 24.7489 9.98371 24.6925 10.1499 24.6925C10.3161 24.6925 10.4578 24.7489 10.575 24.8619C10.6943 24.9727 10.754 25.1069 10.754 25.2646C10.754 25.4201 10.6943 25.5543 10.575 25.6673C10.4578 25.7781 10.3161 25.8335 10.1499 25.8335ZM17.6709 28.2273C17.6709 28.9261 17.5431 29.527 17.2874 30.0298C17.0317 30.5305 16.6812 30.9162 16.2359 31.1868C15.7927 31.4553 15.2888 31.5895 14.7242 31.5895C14.1574 31.5895 13.6514 31.4553 13.2061 31.1868C12.7629 30.9162 12.4135 30.5295 12.1578 30.0266C11.9021 29.5238 11.7743 28.924 11.7743 28.2273C11.7743 27.5284 11.9021 26.9286 12.1578 26.4279C12.4135 25.9251 12.7629 25.5394 13.2061 25.271C13.6514 25.0004 14.1574 24.8651 14.7242 24.8651C15.2888 24.8651 15.7927 25.0004 16.2359 25.271C16.6812 25.5394 17.0317 25.9251 17.2874 26.4279C17.5431 26.9286 17.6709 27.5284 17.6709 28.2273ZM16.693 28.2273C16.693 27.6946 16.6067 27.2461 16.4341 26.8817C16.2636 26.5153 16.0293 26.2383 15.731 26.0508C15.4348 25.8612 15.0992 25.7663 14.7242 25.7663C14.3471 25.7663 14.0104 25.8612 13.7143 26.0508C13.4181 26.2383 13.1837 26.5153 13.0111 26.8817C12.8407 27.2461 12.7555 27.6946 12.7555 28.2273C12.7555 28.7599 12.8407 29.2095 13.0111 29.576C13.1837 29.9403 13.4181 30.2173 13.7143 30.407C14.0104 30.5945 14.3471 30.6882 14.7242 30.6882C15.0992 30.6882 15.4348 30.5945 15.731 30.407C16.0293 30.2173 16.2636 29.9403 16.4341 29.576C16.6067 29.2095 16.693 28.7599 16.693 28.2273ZM22.4722 26.674C22.4381 26.3714 22.2975 26.1371 22.0503 25.9709C21.8031 25.8026 21.4921 25.7184 21.1171 25.7184C20.8486 25.7184 20.6163 25.761 20.4203 25.8462C20.2243 25.9293 20.072 26.0444 19.9633 26.1914C19.8568 26.3363 19.8035 26.5014 19.8035 26.6868C19.8035 26.8423 19.8397 26.9766 19.9122 27.0895C19.9867 27.2024 20.0837 27.2972 20.203 27.3739C20.3244 27.4485 20.4544 27.5114 20.5929 27.5625C20.7314 27.6115 20.8646 27.652 20.9924 27.6839L21.6316 27.8501C21.8404 27.9013 22.0546 27.9705 22.274 28.0579C22.4935 28.1452 22.697 28.2603 22.8845 28.4031C23.072 28.5458 23.2232 28.7227 23.3383 28.9336C23.4555 29.1445 23.5141 29.397 23.5141 29.6911C23.5141 30.0618 23.4182 30.391 23.2264 30.6786C23.0368 30.9663 22.7609 31.1932 22.3987 31.3594C22.0386 31.5256 21.6028 31.6087 21.0915 31.6087C20.6014 31.6087 20.1774 31.5309 19.8195 31.3754C19.4615 31.2198 19.1813 30.9993 18.9789 30.7138C18.7765 30.4261 18.6646 30.0852 18.6433 29.6911H19.6341C19.6533 29.9276 19.73 30.1246 19.8642 30.2823C20.0006 30.4379 20.1742 30.554 20.3852 30.6307C20.5982 30.7053 20.8315 30.7425 21.0851 30.7425C21.3642 30.7425 21.6124 30.6989 21.8298 30.6115C22.0492 30.522 22.2218 30.3984 22.3475 30.2408C22.4732 30.081 22.5361 29.8945 22.5361 29.6815C22.5361 29.4876 22.4807 29.3288 22.3699 29.2053C22.2612 29.0817 22.1131 28.9794 21.9256 28.8984C21.7403 28.8175 21.5304 28.7461 21.296 28.6843L20.5226 28.4734C19.9984 28.3306 19.583 28.1207 19.2761 27.8438C18.9715 27.5668 18.8191 27.2003 18.8191 26.7443C18.8191 26.3672 18.9214 26.038 19.1259 25.7567C19.3305 25.4755 19.6075 25.2571 19.9569 25.1016C20.3063 24.9439 20.7005 24.8651 21.1394 24.8651C21.5826 24.8651 21.9736 24.9428 22.3124 25.0984C22.6533 25.2539 22.9217 25.468 23.1178 25.7408C23.3138 26.0114 23.4161 26.3224 23.4246 26.674H22.4722Z" fill="#ffffff" fill-opacity="0.9"/>
+</svg>`;
+
+const MATERIAL_ICON_SVG = `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_244_194)">
+<g clip-path="url(#clip1_244_194)">
+<path d="M26.505 11.5002C26.505 17.0257 22.0257 21.5053 16.4999 21.5053C10.9741 21.5053 6.49503 17.0257 6.49503 11.5002C6.49503 5.97464 10.9743 1.49503 16.5002 1.49503C22.026 1.49503 26.5053 5.97435 26.5053 11.5002H26.505ZM22.7009 4.49052C19.1692 1.34125 13.8202 1.34895 10.2985 4.49052H22.7009ZM22.4832 5.12459H10.5169L16.5014 17.0956L22.4829 5.12459H22.4832ZM23.5054 17.7069C26.6674 14.1632 26.6461 8.80689 23.5051 5.29318V17.7069H23.5054ZM9.4926 17.7024L9.49201 5.29792C6.32318 8.85815 6.36466 14.1967 9.4926 17.7024ZM22.8722 17.8648L22.8684 5.78117L16.8202 17.8695L22.8722 17.8648ZM16.1751 17.8672L10.1412 5.80309L10.1353 17.8689L16.1751 17.8669V17.8672ZM22.7089 18.5042H10.2914C13.8223 21.6546 19.1727 21.6579 22.7092 18.5042H22.7089Z" fill="white" stroke="white"/>
+</g>
+<path d="M0.326705 31.5H-0.721591L1.63388 24.9545H2.77486L5.13033 31.5H4.08203L2.23153 26.1435H2.1804L0.326705 31.5ZM0.502486 28.9368H3.90305V29.7678H0.502486V28.9368ZM6.95446 28.5852V31.5H5.99885V26.5909H6.9161V27.3899H6.97683C7.08976 27.13 7.2666 26.9212 7.50737 26.7635C7.75027 26.6058 8.05602 26.527 8.42463 26.527C8.75914 26.527 9.05211 26.5973 9.30353 26.7379C9.55495 26.8764 9.74991 27.0831 9.88841 27.358C10.0269 27.6328 10.0961 27.9727 10.0961 28.3775V31.5H9.14054V28.4925C9.14054 28.1367 9.04785 27.8587 8.86248 27.6584C8.67711 27.456 8.4225 27.3548 8.09863 27.3548C7.87704 27.3548 7.67995 27.4027 7.50737 27.4986C7.33691 27.5945 7.20162 27.7351 7.10147 27.9205C7.00346 28.1037 6.95446 28.3253 6.95446 28.5852ZM13.2155 31.5959C12.8192 31.5959 12.4655 31.4947 12.1544 31.2923C11.8454 31.0877 11.6025 30.7969 11.4257 30.4197C11.251 30.0405 11.1636 29.5856 11.1636 29.055C11.1636 28.5245 11.252 28.0707 11.4289 27.6935C11.6079 27.3164 11.8529 27.0277 12.164 26.8274C12.4751 26.6271 12.8277 26.527 13.2219 26.527C13.5265 26.527 13.7716 26.5781 13.9569 26.6804C14.1444 26.7805 14.2893 26.8977 14.3916 27.032C14.496 27.1662 14.577 27.2844 14.6345 27.3867H14.692V24.9545H15.6476V31.5H14.7144V30.7362H14.6345C14.577 30.8406 14.4939 30.9599 14.3852 31.0941C14.2787 31.2283 14.1317 31.3455 13.9442 31.4457C13.7567 31.5458 13.5138 31.5959 13.2155 31.5959ZM13.4264 30.7809C13.7013 30.7809 13.9335 30.7085 14.1231 30.5636C14.3149 30.4165 14.4598 30.2131 14.5578 29.9531C14.6579 29.6932 14.708 29.3906 14.708 29.0455C14.708 28.7045 14.659 28.4062 14.561 28.1506C14.463 27.8949 14.3192 27.6957 14.1295 27.5529C13.9399 27.4102 13.7055 27.3388 13.4264 27.3388C13.1388 27.3388 12.8991 27.4134 12.7073 27.5625C12.5155 27.7116 12.3706 27.9151 12.2726 28.1729C12.1768 28.4308 12.1288 28.7216 12.1288 29.0455C12.1288 29.3736 12.1778 29.6687 12.2758 29.9308C12.3738 30.1928 12.5187 30.4006 12.7105 30.554C12.9044 30.7053 13.143 30.7809 13.4264 30.7809ZM17.0115 31.5V26.5909H17.9352V27.3707H17.9863C18.0758 27.1065 18.2335 26.8988 18.4593 26.7475C18.6873 26.5941 18.9451 26.5174 19.2328 26.5174C19.2924 26.5174 19.3627 26.5195 19.4437 26.5238C19.5268 26.5281 19.5918 26.5334 19.6387 26.5398V27.4538C19.6003 27.4432 19.5321 27.4315 19.4341 27.4187C19.3361 27.4038 19.2381 27.3963 19.1401 27.3963C18.9142 27.3963 18.7129 27.4442 18.536 27.5401C18.3613 27.6339 18.2228 27.7649 18.1206 27.9332C18.0183 28.0994 17.9672 28.2891 17.9672 28.5021V31.5H17.0115ZM22.3577 31.5991C21.8975 31.5991 21.4958 31.4936 21.1528 31.2827C20.8097 31.0717 20.5434 30.7766 20.3538 30.3974C20.1642 30.0181 20.0693 29.5749 20.0693 29.0678C20.0693 28.5586 20.1642 28.1133 20.3538 27.7319C20.5434 27.3505 20.8097 27.0543 21.1528 26.8434C21.4958 26.6325 21.8975 26.527 22.3577 26.527C22.8179 26.527 23.2195 26.6325 23.5626 26.8434C23.9056 27.0543 24.172 27.3505 24.3616 27.7319C24.5512 28.1133 24.646 28.5586 24.646 29.0678C24.646 29.5749 24.5512 30.0181 24.3616 30.3974C24.172 30.7766 23.9056 31.0717 23.5626 31.2827C23.2195 31.4936 22.8179 31.5991 22.3577 31.5991ZM22.3609 30.7969C22.6592 30.7969 22.9063 30.718 23.1024 30.5604C23.2984 30.4027 23.4433 30.1928 23.537 29.9308C23.6329 29.6687 23.6808 29.38 23.6808 29.0646C23.6808 28.7514 23.6329 28.4638 23.537 28.2017C23.4433 27.9375 23.2984 27.7255 23.1024 27.5657C22.9063 27.4059 22.6592 27.326 22.3609 27.326C22.0605 27.326 21.8112 27.4059 21.613 27.5657C21.417 27.7255 21.271 27.9375 21.1752 28.2017C21.0814 28.4638 21.0345 28.7514 21.0345 29.0646C21.0345 29.38 21.0814 29.6687 21.1752 29.9308C21.271 30.1928 21.417 30.4027 21.613 30.5604C21.8112 30.718 22.0605 30.7969 22.3609 30.7969ZM25.7127 31.5V26.5909H26.6683V31.5H25.7127ZM26.1953 25.8335C26.0291 25.8335 25.8864 25.7781 25.767 25.6673C25.6499 25.5543 25.5913 25.4201 25.5913 25.2646C25.5913 25.1069 25.6499 24.9727 25.767 24.8619C25.8864 24.7489 26.0291 24.6925 26.1953 24.6925C26.3615 24.6925 26.5032 24.7489 26.6204 24.8619C26.7397 24.9727 26.7994 25.1069 26.7994 25.2646C26.7994 25.4201 26.7397 25.5543 26.6204 25.6673C26.5032 25.7781 26.3615 25.8335 26.1953 25.8335ZM29.7916 31.5959C29.3953 31.5959 29.0416 31.4947 28.7306 31.2923C28.4216 31.0877 28.1787 30.7969 28.0019 30.4197C27.8271 30.0405 27.7398 29.5856 27.7398 29.055C27.7398 28.5245 27.8282 28.0707 28.0051 27.6935C28.184 27.3164 28.4291 27.0277 28.7401 26.8274C29.0512 26.6271 29.4039 26.527 29.798 26.527C30.1027 26.527 30.3477 26.5781 30.5331 26.6804C30.7206 26.7805 30.8655 26.8977 30.9678 27.032C31.0722 27.1662 31.1531 27.2844 31.2107 27.3867H31.2682V24.9545H32.2238V31.5H31.2906V30.7362H31.2107C31.1531 30.8406 31.07 30.9599 30.9614 31.0941C30.8548 31.2283 30.7078 31.3455 30.5203 31.4457C30.3328 31.5458 30.0899 31.5959 29.7916 31.5959ZM30.0026 30.7809C30.2774 30.7809 30.5097 30.7085 30.6993 30.5636C30.8911 30.4165 31.036 30.2131 31.134 29.9531C31.2341 29.6932 31.2842 29.3906 31.2842 29.0455C31.2842 28.7045 31.2352 28.4062 31.1372 28.1506C31.0392 27.8949 30.8953 27.6957 30.7057 27.5529C30.5161 27.4102 30.2817 27.3388 30.0026 27.3388C29.7149 27.3388 29.4752 27.4134 29.2835 27.5625C29.0917 27.7116 28.9468 27.9151 28.8488 28.1729C28.7529 28.4308 28.705 28.7216 28.705 29.0455C28.705 29.3736 28.754 29.6687 28.852 29.9308C28.95 30.1928 29.0949 30.4006 29.2867 30.554C29.4806 30.7053 29.7192 30.7809 30.0026 30.7809Z" fill="white" fill-opacity="0.9"/>
+</g>
+<defs>
+<clipPath id="clip0_244_194">
+<rect width="32" height="32" fill="white"/>
+</clipPath>
+<clipPath id="clip1_244_194">
+<rect width="23" height="23" fill="white" transform="translate(5)"/>
+</clipPath>
+</defs>
+</svg>`;
+
+const LOCK_ICON_SVG = `<svg width="13" height="15" viewBox="0 0 13 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 6.4V4.6C3 2.6 4.6 1 6.5 1C8.4 1 10 2.6 10 4.6V6.4" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1.4" y="6.4" width="10.2" height="7.4" rx="1.8" fill="#ffffff"/>
+</svg>`;
+
+/* ---------- DATA ---------- */
+const DATA = [
+  {
+    id: 'presentation',
+    group: 'components',
+    title: 'Presentation',
+    subtitle: 'Модальные окна, всплывающие элементы и способы показа контента',
+    components: [
+      {
+        id: 'action-sheets', name: 'Action Sheets',
+        ru: 'Модальное окно, предлагающее варианты выбора, связанные с намеренным действием пользователя. Обычно выезжает снизу экрана и может включать кнопку отмены.'
+      },
+      {
+        id: 'alerts', name: 'Alerts',
+        ru: 'Всплывающее окно с критически важной информацией, требующей немедленного внимания. Показывает заголовок, короткий текст и до трёх кнопок.'
+      },
+      {
+        id: 'page-controls', name: 'Page Controls',
+        ru: 'Ряд точек-индикаторов, показывающий положение текущей страницы в последовательном списке экранов. Заполненная точка обозначает активную страницу.'
+      },
+      {
+        id: 'sheets', name: 'Sheets',
+        ru: 'Окно для выполнения ограниченной задачи, тесно связанной с текущим контекстом. Выезжает снизу и может иметь несколько уровней высоты — detents.'
+      }
+    ]
+  },
+  {
+    id: 'layout-and-organization',
+    group: 'components',
+    title: 'Layout & Organization',
+    subtitle: 'Списки и таблицы для структурированных данных',
+    components: [
+      { id: 'lists-and-tables', name: 'Lists and Tables',
+        ru: 'Список или таблица — структура для отображения данных, организованных в группы или иерархии, с поддержкой выбора, добавления, удаления и изменения порядка строк. Например, в Настройках iOS иерархия списков помогает выбирать нужные опции.' }
+    ]
+  },
+  {
+    id: 'menus-and-actions',
+    group: 'components',
+    title: 'Menus & Actions',
+    subtitle: 'Кнопки, меню и панели инструментов для выполнения действий',
+    components: [
+      { id: 'activity-views', name: 'Activity Views',
+        ru: 'Шторка или всплывающее окно (в зависимости от устройства) с вариантами для шеринга контента — сообщения, копирование, печать — а также быстрым доступом к часто используемым приложениям.' },
+      { id: 'buttons', name: 'Buttons',
+        ru: 'Элемент управления, с помощью которого одним нажатием выполняют действие, — простой и привычный способ взаимодействия. Стиль кнопки — размер, цвет и форма — ясно сообщает о её функции.' },
+      { id: 'context-menus', name: 'Context Menus',
+        ru: 'Скрытое по умолчанию меню с быстрым доступом к действиям для выбранного элемента. Вызывается долгим нажатием или специальным жестом.' },
+      { id: 'menus', name: 'Menus',
+        ru: 'Список пунктов, каждый из которых представляет команду, опцию или состояние, влияющее на текущий выбор. Люди уже знают, как пользоваться меню, независимо от того, системный это компонент или собственный.' },
+      { id: 'pop-up-buttons', name: 'Pop-up Buttons',
+        ru: 'Кнопка, показывающая плоский список взаимоисключающих вариантов. После выбора элемента меню закрывается, а кнопка обновляется, отражая текущий выбор.' },
+      { id: 'toolbars', name: 'Toolbars',
+        ru: 'Набор элементов управления, расположенных горизонтально вдоль верхнего или нижнего края экрана, сгруппированных по смыслу. Помогает управлять контентом, перемещаться по приложению и ориентироваться в нём.' }
+    ]
+  },
+  {
+    id: 'navigation-and-search',
+    group: 'components',
+    title: 'Navigation & Search',
+    subtitle: 'Навигационные панели и вкладки для переходов между разделами',
+    components: [
+      { id: 'tab-bars', name: 'Tab Bars',
+        ru: 'Панель с вкладками для навигации между основными разделами приложения — с иконкой и подписью у каждой вкладки. Позволяет быстро переключаться между разделами, сохраняя состояние каждого из них, и используется для навигации, а не для действий над текущим экраном.' }
+    ]
+  },
+  {
+    id: 'selection-and-input',
+    group: 'components',
+    title: 'Selection & Input',
+    subtitle: 'Элементы для выбора значений и ввода данных',
+    components: [
+      { id: 'color-wells', name: 'Color Wells',
+        ru: 'Элемент управления, который при нажатии открывает выбор цвета — системную или собственную палитру. Системный выбор цвета даёт единый опыт и позволяет сохранять избранные цвета для разных приложений.' },
+      { id: 'pickers', name: 'Pickers',
+        ru: 'Элемент управления для выбора одного или нескольких значений — например, даты, времени или произвольного параметра — из заранее заданного набора. Конкретный вид и порядок значений зависят от языка устройства.' },
+      { id: 'segmented-controls', name: 'Segmented Controls',
+        ru: 'Набор сегментов равной ширины с текстом или изображениями, из которых выбирают один вариант. Хорошо подходит для переключения между близкими по смыслу подпредставлениями.' },
+      { id: 'sliders', name: 'Sliders',
+        ru: 'Горизонтальный трек с ползунком (бегунком), который перетаскивают, чтобы плавно выбрать значение из непрерывного диапазона. Часть трека между минимумом и ползунком закрашивается цветом, отражая текущее значение.' },
+      { id: 'steppers', name: 'Steppers',
+        ru: 'Пара кнопок «плюс» и «минус» для пошагового изменения значения, которое отображается в соседнем поле. Сам степпер значение не показывает — важно явно указывать, что именно он изменяет.' },
+      { id: 'text-fields', name: 'Text Fields',
+        ru: 'Однострочное поле для ввода небольшого объёма текста, например имени или email. Может содержать текст-подсказку и кнопку очистки для быстрого удаления введённого текста.' },
+      { id: 'toggles', name: 'Toggles',
+        ru: 'Переключатель между двумя состояниями — например, вкл/выкл — в виде свитча или чекбокса в зависимости от платформы. В списках свитч обычно используется без отдельной подписи, так как контекст задаёт содержимое строки.' },
+      { id: 'virtual-keyboards', name: 'Virtual Keyboards',
+        ru: 'Экранная клавиатура, набор клавиш которой может быть оптимизирован под конкретную задачу — например, ввод email с символом «@». Не поддерживает аппаратные сочетания клавиш, но может быть заменена собственной раскладкой.' }
+    ]
+  },
+  {
+    id: 'status',
+    group: 'components',
+    title: 'Status',
+    subtitle: 'Индикатор выполнения долгих операций',
+    components: [
+      { id: 'progress-indicators', name: 'Progress Indicators',
+        ru: 'Временный элемент, который появляется только на время выполнения операции и исчезает после её завершения. Бывает двух типов — для операций с известной и неизвестной длительностью.' }
+    ]
+  },
+  {
+    id: 'system-experiences',
+    group: 'components',
+    title: 'System Experiences',
+    subtitle: 'Уведомления, виджеты и другие системные точки взаимодействия',
+    components: [
+      { id: 'notifications', name: 'Notifications',
+        ru: 'Системное сообщение о новых событиях за пределами приложения; перед отправкой уведомлений нужно получить согласие человека. Внешний вид и поведение уведомления могут отличаться в зависимости от платформы.' },
+      { id: 'status-bars', name: 'Status Bars',
+        ru: 'Полоса в верхней части экрана с системной информацией — временем, уровнем заряда и состоянием сети. По умолчанию прозрачна, поэтому важно не размещать под ней интерактивный контент.' },
+      { id: 'widgets', name: 'Widgets',
+        ru: 'Компонент с актуальным, легко считываемым контентом и быстрым доступом к функциям приложения — на главном экране, экране блокировки или в Сегодня. Хороший виджет даёт полезную информацию, а не служит просто ярлыком для запуска приложения.' },
+      { id: 'controls', name: 'Controls',
+        ru: 'Небольшой элемент, который выполняет действие приложения прямо из Control Center, с экрана блокировки или по удержанию Action Button — без запуска самого приложения. Бывает кнопкой или переключателем с двумя состояниями.' }
+    ]
+  },
+  {
+    id: 'foundations',
+    group: 'foundations',
+    title: 'Foundations',
+    subtitle: 'Цвет, типографика, иконки и другие базовые принципы дизайна',
+    components: [
+      { id: 'accessibility', name: 'Accessibility',
+        ru: 'Делает интерфейс понятным и доступным для всех людей независимо от их возможностей и способа использования устройства. Доступный интерфейс интуитивен, последователен и не полагается только на один орган чувств.' },
+      { id: 'app-icons', name: 'App Icons',
+        ru: 'Иконка приложения — ключевая часть его идентичности: появляется на главном экране, в поиске, уведомлениях и настройках. Многослойная иконка даёт больше контроля над тем, как она выглядит на разных платформах.' },
+      { id: 'branding', name: 'Branding',
+        ru: 'Способ выразить уникальный голос и характер бренда через слова, цвета и визуальные элементы во всём приложении. Тон коммуникации стоит выдерживать последовательно везде, где приложение общается с человеком.' },
+      { id: 'color', name: 'Color',
+        ru: 'Системные цвета хорошо выглядят на разных фонах и режимах отображения, автоматически подстраиваясь под яркость и настройки специальных возможностей. Собственные цвета помогают подчеркнуть индивидуальность приложения.' },
+      { id: 'dark-mode', name: 'Dark Mode',
+        ru: 'Тёмная тема использует тёмную палитру для всех экранов, представлений и элементов управления, снижая нагрузку на глаза при слабом освещении. Люди ожидают, что приложение уважает их системный выбор темы, а не предлагает свою настройку.' },
+      { id: 'icons', name: 'Icons',
+        ru: 'Простые интерфейсные значки — глифы — помогают понимать доступные элементы, действия и режимы с помощью лаконичных форм и минимума цвета. Их можно создать самостоятельно или взять готовыми из SF Symbols.' },
+      { id: 'images', name: 'Images',
+        ru: 'Точка — абстрактная единица измерения, которая помогает изображениям выглядеть одинаково независимо от разрешения экрана устройства. Разные устройства показывают картинки в разном разрешении, поэтому контент нужен в нескольких масштабах.' },
+      { id: 'inclusion', name: 'Inclusion',
+        ru: 'Инклюзивный дизайн учитывает разнообразие людей — их происхождение, способности и опыт — в словах и образах приложения. Это итеративный процесс: важно пересматривать собственные предположения о том, как думают и чувствуют другие.' },
+      { id: 'layout', name: 'Layout',
+        ru: 'Раскладка экрана помогает людям сразу сориентироваться в контенте благодаря привычным отношениям между элементами управления и содержимым. Хорошая раскладка использует знакомые паттерны платформы.' },
+      { id: 'materials', name: 'Materials',
+        ru: 'Материалы визуально отделяют элементы переднего плана — текст и элементы управления — от фона, пропуская сквозь себя цвет. Liquid Glass — новый динамический материал, объединяющий язык дизайна на всех платформах Apple.' },
+      { id: 'motion', name: 'Motion',
+        ru: 'Многие системные компоненты уже включают анимацию по умолчанию, обеспечивая привычный и последовательный опыт. Движение может подстраиваться под способ ввода или настройки специальных возможностей, например уменьшение анимации.' },
+      { id: 'privacy', name: 'Privacy',
+        ru: 'При публикации или обновлении приложения нужно указать, какие данные оно собирает и как их использует — это отображается на странице в App Store. Люди используют эти сведения, чтобы принять осознанное решение перед установкой.' },
+      { id: 'right-to-left', name: 'Right to Left',
+        ru: 'Когда человек выбирает язык с письмом справа налево — например, арабский или иврит — интерфейс должен зеркально отразить макет. Системные UI-фреймворки поддерживают это по умолчанию, автоматически разворачивая стандартные компоненты.' },
+      { id: 'sf-symbols', name: 'SF Symbols',
+        ru: 'Библиотека из тысяч векторных символов, которые можно использовать как значки в тулбарах, таб-барах, меню и прямо внутри текста. Символы автоматически подстраиваются под насыщенность и размер соседнего шрифта.' },
+      { id: 'typography', name: 'Typography',
+        ru: 'Правильный размер и начертание шрифта делают текст удобочитаемым на разных расстояниях и в разных условиях. SF Pro — системный шрифт iOS, который поддерживает Dynamic Type для масштабирования текста под предпочтения человека.' },
+      { id: 'writing', name: 'Writing',
+        ru: 'Слова в приложении — часть его дизайна: от онбординга до текста в алертах — и должны отражать выбранный голос бренда. Стоит заранее продумать, к кому обращается приложение и какая лексика будет ему близка.' }
+    ]
+  },
+  {
+    id: 'patterns',
+    group: 'patterns',
+    title: 'Patterns',
+    subtitle: 'Типовые сценарии поведения: онбординг, поиск, undo/redo и другое',
+    components: [
+      { id: 'charting-data', name: 'Charting Data',
+        ru: 'Диаграммы помогают эффективно доносить сложную информацию, не заставляя читать много текста. Диаграмма может быть простой наглядной картинкой или превращаться в насыщенный интерактивный элемент — центр всего интерфейса.' },
+      { id: 'collaboration-and-sharing', name: 'Collaboration and Sharing',
+        ru: 'Системные интерфейсы и приложение Сообщения помогают людям делиться контентом и работать над ним вместе. Например, можно начать совместную работу, перетащив документ в переписку, или выбрать нужное назначение в шторке «Поделиться».' },
+      { id: 'drag-and-drop', name: 'Drag and Drop',
+        ru: 'Позволяет выбрать контент в одном месте — источнике — и перетащить его в другое, место назначения: в том же контейнере, другом или даже в другом приложении. В зависимости от ситуации действие может перемещать или копировать контент.' },
+      { id: 'entering-data', name: 'Entering Data',
+        ru: 'Ввод информации часто утомителен независимо от способа взаимодействия. Облегчить процесс можно, заранее собрав как можно больше данных и минимизировав то, что должен ввести сам человек.' },
+      { id: 'feedback', name: 'Feedback',
+        ru: 'Понятная и последовательная обратная связь на действия людей делает приложение интуитивным и поощряет исследовать его глубже. Обратная связь может сообщать о текущем статусе, результате действия или ошибке.' },
+      { id: 'file-management', name: 'File Management',
+        ru: 'Приложения на основе документов — такие как Pages, Keynote или Preview — помогают создавать, редактировать и сохранять файлы, часто предлагая удобные способы их поиска. На iPhone для этого используется приложение Файлы.' },
+      { id: 'going-full-screen', name: 'Going Full Screen',
+        ru: 'Полноэкранный режим помогает людям сосредоточиться на задаче, скрывая второстепенные элементы интерфейса. Стоит поддерживать этот режим, только если он действительно подходит характеру приложения.' },
+      { id: 'launching', name: 'Launching',
+        ru: 'Запуск начинается, когда человек открывает приложение, включает первичную загрузку и заканчивается, когда готов первый экран. Люди хотят начать взаимодействие сразу и не готовы ждать больше пары секунд.' },
+      { id: 'live-viewing-apps', name: 'Live-Viewing Apps',
+        ru: 'Приложения для просмотра прямых трансляций должны выделять и приоритизировать живой контент, явно отличая его от записи по запросу. Живой контент стоит показывать заметно и делать доступным в один клик.' },
+      { id: 'loading', name: 'Loading',
+        ru: 'Если приложение загружает ресурсы, уровни или другой контент, важно спроектировать процесс так, чтобы он не портил впечатление от использования. Лучше показать что-то как можно раньше, чем оставить пустой экран.' },
+      { id: 'managing-accounts', name: 'Managing Accounts',
+        ru: 'Просите создать аккаунт, только если это действительно необходимо для основной функциональности приложения. Если аккаунт обязателен, стоит объяснить его преимущества и рассмотреть Sign in with Apple для удобного входа.' },
+      { id: 'managing-notifications', name: 'Managing Notifications',
+        ru: 'Перед отправкой любого уведомления нужно получить разрешение человека; система позволяет в любой момент изменить это решение в настройках. Люди ценят уведомления о важном для себя, но не любят, когда их отвлекают попусту.' },
+      { id: 'modality', name: 'Modality',
+        ru: 'Модальное представление контента гарантирует, что человек получит критически важную информацию и, если нужно, отреагирует на неё. Модальность прерывает обычный поток взаимодействия ради концентрации внимания на задаче.' },
+      { id: 'multitasking', name: 'Multitasking',
+        ru: 'Люди ожидают, что смогут работать в приложении параллельно с другими задачами на устройстве, и могут решить, что с приложением что-то не так, если это не так. Почти каждое приложение должно хорошо работать в условиях многозадачности.' },
+      { id: 'offering-help', name: 'Offering Help',
+        ru: 'Задачи приложения подсказывают, какая именно помощь нужна человеку: простые действия можно объяснить короткой подсказкой, а сложные — обучающим туром. Помощь стоит привязывать к тому действию, которое человек выполняет прямо сейчас.' },
+      { id: 'onboarding', name: 'Onboarding',
+        ru: 'В идеале человек понимает приложение просто пользуясь им, но если онбординг всё же нужен, он должен быть быстрым, увлекательным и необязательным. Люди лучше запоминают информацию, когда практически выполняют задачу.' },
+      { id: 'playing-audio', name: 'Playing Audio',
+        ru: 'Устройства воспроизводят звук по-разному — через встроенные или внешние динамики, наушники или беспроводные аксессуары. Звук ли он ключевая часть опыта или просто дополнение, важно убедиться, что он хорошо вписывается в контекст.' },
+      { id: 'playing-haptics', name: 'Playing Haptics',
+        ru: 'В зависимости от платформы и устройства система может дополнять визуальную и звуковую обратную связь тактильной. Например, переключатели, слайдеры и пикеры на поддерживаемых iPhone автоматически воспроизводят системные тактильные эффекты.' },
+      { id: 'playing-video', name: 'Playing Video',
+        ru: 'Система предоставляет готовые видеоплееры для встраивания воспроизведения внутри приложения — они поддерживают разные режимы соотношения сторон и Picture in Picture. Можно также предлагать контент через приложение TV.' },
+      { id: 'printing', name: 'Printing',
+        ru: 'Сделайте функцию печати легко обнаружимой, разместив её в стандартных для системы местах — например, в панели действий. Показывайте опцию печати, только когда печать действительно возможна для текущего контента.' },
+      { id: 'ratings-and-reviews', name: 'Ratings and Reviews',
+        ru: 'Лучший способ получить хорошие оценки и отзывы — предоставить отличный опыт использования в целом, но важен ещё и правильный момент для запроса обратной связи. Можно ориентироваться на частоту запуска приложения или число задач.' },
+      { id: 'searching', name: 'Searching',
+        ru: 'Чтобы найти контент внутри приложения, люди обычно ожидают увидеть поле поиска. Можно персонализировать поиск, показывая недавние запросы, подсказки, автодополнения или исправления на основе прошлых запросов человека.' },
+      { id: 'settings', name: 'Settings',
+        ru: 'Системное приложение Настройки позволяет менять общий вид системы, сетевые подключения, данные аккаунта, специальные возможности, язык и регион. На некоторых платформах оно также включает настройки конкретных приложений.' },
+      { id: 'undo-and-redo', name: 'Undo and Redo',
+        ru: 'Люди ожидают, что смогут отменить и повторить недавние действия, и нередко нажимают «отменить» несколько раз подряд, пытаясь понять, что изменится. Важно помогать людям предсказывать результат отмены и повтора.' },
+      { id: 'workouts', name: 'Workouts',
+        ru: 'Люди могут брать с собой iPhone во время прогулок, пробежек или других активностей. Можно создать опыт тренировки, используя данные об активности человека.' }
+    ]
+  }
+];
+
+/* ---------- COMPONENT -> CATEGORY LOOKUP (for the study-card badge) ---------- */
+const COMPONENT_CATEGORY = {};
+DATA.forEach(cat => {
+  if((cat.group || 'components') === 'components'){
+    cat.components.forEach(c => { COMPONENT_CATEGORY[c.id] = { id: cat.id, title: cat.title }; });
+  }
+});
+
+/* ---------- STATE ---------- */
+const PROGRESS_KEY = 'hig_flashcards_progress_v1';
+let state = {
+  categoryId: null,
+  mode: null,       // 'study' | 'quiz'
+  index: 0,
+  quizResults: []   // array of true/false/null aligned with components
+};
+
+function saveProgress(){
+  if(!state.categoryId || !state.mode) { localStorage.removeItem(PROGRESS_KEY); return; }
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(state));
+}
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function clearProgress(){
+  localStorage.removeItem(PROGRESS_KEY);
+}
+
+function getCategory(id){
+  if(id === '__global__'){
+    const all = {};
+    DATA.forEach(cat => cat.components.forEach(c => { all[c.id] = c; }));
+    return {
+      id: '__global__',
+      title: 'Общая викторина',
+      subtitle: 'Случайные карточки из всех разделов',
+      components: (state.globalIds || []).map(cid => all[cid]).filter(Boolean)
+    };
+  }
+  if(id === '__global_study__'){
+    return {
+      id: '__global_study__',
+      title: 'Все компоненты',
+      subtitle: 'Изучение всех разделов подряд',
+      components: DATA.filter(cat => (cat.group || 'components') === 'components')
+        .flatMap(cat => cat.components)
+    };
+  }
+  const cat = DATA.find(c => c.id === id);
+  // In quiz mode, show this category's cards in the shuffled order set up by startQuiz(),
+  // instead of the fixed order used for Study mode.
+  if(cat && state.mode === 'quiz' && state.categoryId === id && state.quizIds && state.quizIds.length){
+    const byId = {};
+    cat.components.forEach(c => { byId[c.id] = c; });
+    return Object.assign({}, cat, { components: state.quizIds.map(cid => byId[cid]).filter(Boolean) });
+  }
+  return cat;
+}
+
+function shuffledIds(components){
+  const ids = components.map(c => c.id);
+  for(let i = ids.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+  }
+  return ids;
+}
+
+/* ---------- NAVIGATION HELPERS ---------- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goHome(){
+  state.mode = null;
+  renderHome();
+  showScreen('screen-home');
+}
+
+let currentCategoryForModeScreen = null;
+// Both Study and Quiz now run across everything (no more per-section
+// screens to return to), so stepping "back" from either always lands on
+// the mode-select screen for '__global_study__'/'__global__', or Home.
+function goCategory(){
+  state.mode = null;
+  saveProgress();
+  if(currentCategoryForModeScreen === '__global_study__'){
+    openHigModeSelect();
+  } else {
+    goHome();
+  }
+}
+
+/* ---------- HOME RENDER ---------- */
+function pluralComponents(n){
+  const mod10 = n % 10, mod100 = n % 100;
+  if(mod10 === 1 && mod100 !== 11) return 'компонент';
+  if([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return 'компонента';
+  return 'компонентов';
+}
+function renderHome(){
+  const container = document.getElementById('homeGroups');
+  container.innerHTML = '';
+
+  const quizRow = document.createElement('button');
+  quizRow.className = 'quiz-all-row';
+  quizRow.onclick = () => startGlobalQuiz();
+  quizRow.innerHTML = `
+    <div class="icon-box"><svg width="24" height="22" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26 13.3801C25.8378 13.9161 25.2686 14.2366 24.7164 13.9952L21.5195 12.601C21.1417 12.4363 20.9173 12.1094 20.927 11.7219C20.9367 11.3594 21.1579 11.0535 21.5195 10.8952L24.7164 9.50104C25.2686 9.26046 25.8386 9.57854 26.0008 10.1323L26.0008 13.3793L26 13.3801Z" fill="#ffffff"/><path d="M-0.000426197 12.6567L8.55686 12.6551L8.85637 13.3736L2.80895 19.4097C1.18064 17.5061 0.20624 15.2102 -0.000426197 12.6567Z" fill="#ffffff"/><path d="M12.6797 8.54518L12.6797 7.93978e-08C15.1815 0.196172 17.5251 1.15846 19.4456 2.80534L13.399 8.83904L12.6797 8.54518Z" fill="#ffffff"/><path d="M12.6789 14.9712L13.3901 14.6507L19.4448 20.6925C17.5251 22.3386 15.1807 23.3001 12.6797 23.4978L12.6789 14.9712Z" fill="#ffffff"/><path d="M10.1456 8.84227L4.09739 2.80534C6.01713 1.15927 8.3607 0.196172 10.8633 0L10.8617 8.55729L10.1456 8.84227Z" fill="#ffffff"/><path d="M4.09739 20.6941L10.1448 14.658L10.8633 14.9567L10.8633 23.4979C8.38007 23.2977 6.05911 22.3652 4.09739 20.6941Z" fill="#ffffff"/><path d="M0.00522738 10.8419C0.188483 8.34822 1.16934 6.00788 2.80976 4.08975L8.85718 10.1259L8.55768 10.8427H0.00603546L0.00522738 10.8419Z" fill="#ffffff"/><path d="M14.9805 12.6559H19.2664C19.536 13.3825 20.0357 13.9201 20.73 14.2317L23.0461 15.2481C22.5601 16.7941 21.7908 18.1738 20.7324 19.4097L14.6858 13.3736L14.9797 12.6567L14.9805 12.6559Z" fill="#ffffff"/><path d="M19.272 10.8419H14.9708L14.6858 10.1267L20.7324 4.08975C21.79 5.32572 22.5577 6.70457 23.0445 8.25053L20.772 9.24673C20.0785 9.55431 19.557 10.0645 19.272 10.8419Z" fill="#ffffff"/><path d="M10.2578 11.7485C10.2578 12.5827 10.9355 13.259 11.7715 13.259C12.6075 13.259 13.2852 12.5827 13.2852 11.7485C13.2852 10.9143 12.6075 10.2381 11.7715 10.2381C10.9355 10.2381 10.2578 10.9143 10.2578 11.7485Z" fill="#ffffff"/></svg></div>
+    <div class="label"><strong>Общая викторина</strong><span>20 случайных карточек из всех разделов</span></div>
+    <div class="chev">›</div>
+  `;
+  container.appendChild(quizRow);
+
+  const heading = document.createElement('h2');
+  heading.className = 'group-title';
+  heading.textContent = 'Темы';
+  container.appendChild(heading);
+
+  const higRow = document.createElement('button');
+  higRow.className = 'quiz-all-row';
+  higRow.onclick = () => openHigModeSelect();
+  higRow.innerHTML = `
+    <div class="icon-box">${HIG_ICON_SVG}</div>
+    <div class="label"><strong>Готовые элементы интерфейса iOS</strong><span>Официальная документация Apple</span></div>
+    <div class="chev">›</div>
+  `;
+  container.appendChild(higRow);
+
+  const mdRow = document.createElement('button');
+  mdRow.className = 'quiz-all-row is-disabled';
+  mdRow.disabled = true;
+  mdRow.innerHTML = `
+    <div class="icon-box">${MATERIAL_ICON_SVG}</div>
+    <div class="label"><strong>Material Design</strong><span>Открытая дизайн-система Google</span></div>
+    <div class="lock-badge">${LOCK_ICON_SVG}</div>
+  `;
+  container.appendChild(mdRow);
+
+  const banner = document.getElementById('continueBanner');
+  const p = loadProgress();
+  if(p && p.categoryId && p.mode){
+    const cat = getCategory(p.categoryId);
+    if(cat){
+      const modeLabel = p.mode === 'study' ? 'Изучение' : 'Викторина';
+      banner.innerHTML = `
+        <div class="continue-banner" onclick="resumeProgress()">
+          <div class="dot"></div>
+          <div class="txt"><strong>Продолжить с места остановки</strong><span>${cat.title} · ${modeLabel} · карточка ${p.index+1} из ${cat.components.length}</span></div>
+          <div class="arrow">›</div>
+        </div>
+      `;
+      return;
+    }
+  }
+  banner.innerHTML = '';
+}
+
+function openDesignSystemSection(){
+  showScreen('screen-design-system');
+}
+
+function resumeProgress(){
+  const p = loadProgress();
+  if(!p) return;
+  state = Object.assign({categoryId:null,mode:null,index:0,quizResults:[]}, p);
+  currentCategoryForModeScreen = state.categoryId;
+  if(state.mode === 'study'){
+    renderStudyCard();
+    showScreen('screen-study');
+  } else if(state.mode === 'quiz'){
+    renderQuizCard();
+    showScreen('screen-quiz');
+  }
+}
+
+/* ---------- MODE SELECT (Готовые элементы iOS -> Изучение/Викторина) ---------- */
+// Sections used to gate this screen (pick a category, then pick a mode), but
+// most sections only held 1-2 components, so splitting them up added a step
+// for no real benefit. Study and Quiz both work across everything now (see
+// startStudy() and startGlobalQuiz()); this screen just offers the choice.
+function openHigModeSelect(){
+  currentCategoryForModeScreen = '__global_study__';
+  document.getElementById('catTitle').textContent = 'Готовые элементы iOS';
+  const catPreviewEl = document.getElementById('catPreview');
+  catPreviewEl.classList.add('has-image');
+  catPreviewEl.innerHTML = '<img src="assets/hig-hero.png" alt="Готовые элементы iOS">';
+  showScreen('screen-category');
+}
+
+/* ---------- STUDY MODE ---------- */
+// Study is always global: it runs through every component from every
+// category as one continuous deck, with the originating section shown
+// as a small badge on the card (see COMPONENT_CATEGORY / .cat-badge).
+function startStudy(){
+  const tappedCatId = currentCategoryForModeScreen;
+  currentCategoryForModeScreen = '__global_study__';
+  state.categoryId = '__global_study__';
+  state.mode = 'study';
+  const all = getCategory('__global_study__').components;
+  const startIdx = all.findIndex(c => COMPONENT_CATEGORY[c.id] && COMPONENT_CATEGORY[c.id].id === tappedCatId);
+  state.index = startIdx >= 0 ? startIdx : 0;
+  saveProgress();
+  renderStudyCard();
+  showScreen('screen-study');
+}
+
+/* ---------- INFO / EXAMPLES ---------- */
+/* Each entry is an ordered list of blocks, mirroring the layout of the "Info_*" frames in Figma:
+   caption -> image -> caption -> heading -> text -> [heading -> text] -> image(s) */
+const INFO_CONTENT = {
+  'action-sheets': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/action-sheets-figma.png', alt:'Компонент Action Sheet из Figma', caption:'Action Sheet' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'В отличие от alert, который обычно появляется неожиданно и сообщает о проблеме, action sheet предлагает выбор после того, как человек сам инициировал действие.\n\nИспользуйте нечасто: action sheet прерывает текущую задачу. Заголовок делайте коротким, в одну строку, а сообщение добавляйте, только если без него не обойтись.\n\nДеструктивные варианты выделяйте стилем destructive и ставьте вверху списка — так они заметнее; кнопку «Отмена» — внизу. Всего в списке не больше четырёх кнопок, включая «Отмена».' },
+    { type:'image', src:'assets/action-sheets-example1.png', alt:'Составление письма в Mail на iPhone', caption:'Отмена редактирования письма в Mail' },
+    { type:'image', src:'assets/action-sheets-example2.png', alt:'Action Sheet с вариантами Delete Draft и Save Draft', caption:'Action sheet предлагает выбор: удалить или сохранить черновик' }
+  ]},
+  'alerts': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/alerts-figma-1.png', alt:'Компонент Alert из Figma — кнопки рядом' },
+    { type:'image', src:'assets/alerts-figma-2.png', alt:'Компонент Alert из Figma — кнопки друг под другом' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Показывайте его редко: только когда без ответа человека система не может продолжить (например, будут потеряны данные).\n\nНе используйте alert просто для информирования или приветствия при запуске. Заголовок формулируйте как вопрос или короткое утверждение, избегайте слова «Ошибка».\n\nКнопки называйте глаголами («Удалить», «Отмена»), а не «ОК» или «Да» — так яснее, что произойдёт после нажатия.' },
+    { type:'image', src:'assets/alerts-apple.png', alt:'Alert по центру экрана на iPhone' }
+  ]},
+  'page-controls': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/page-controls-figma.png', alt:'Компонент Page Control из Figma — разные позиции активной точки', caption:'Page Control' },
+    { type:'image', src:'assets/page-controls-indicator.png', alt:'Неактивная и активная точки индикатора', size:'xsmall', caption:'Page Indicator' },
+    { type:'image', src:'assets/page-controls-light.png', alt:'Варианты Page Control с разным числом страниц в светлой теме', caption:'Число точек растёт вместе с количеством страниц, активная точка крупнее и темнее остальных' },
+    { type:'image', src:'assets/page-controls-dark.png', alt:'Те же варианты в тёмной теме', caption:'Светлая и тёмная версии одного и того же компонента' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Подходит только для заранее известного, линейного набора страниц — например, приветственных экранов при первом запуске.\n\nРасполагайте точки по центру внизу, не смешивая с другими элементами управления. Если страниц больше десяти, лучше использовать другой способ навигации — растянутый ряд точек станет неудобным для восприятия и попадания пальцем.\n\nПо краям ряда можно добавить дополнительные значки-индикаторы для особых действий или разделов — например, значок геопозиции в начале и значок списка в конце. Используйте не больше двух видов индикаторов одновременно: так ряд выглядит аккуратным, а опыт — целостным.' },
+    { type:'image', src:'assets/page-controls-maps.png', alt:'Page Control в приложении Карты с дополнительными значками по краям', caption:'Использование всего двух разных индикаторов выглядит аккуратно и обеспечивает целостный опыт' }
+  ]},
+  'sheets': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/sheets-figma-medium.png', alt:'Sheet высотой Medium из Figma', caption:'Detent: Medium' },
+    { type:'image', src:'assets/sheets-figma-large.png', alt:'Sheet высотой Large из Figma', caption:'Medium и Large — два основных уровня высоты листа (detents)' },
+    { type:'image', src:'assets/sheets-figma-large-stacked.png', alt:'Два листа, открытых один поверх другого', caption:'Связанные между собой листы можно открывать друг над другом' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'В отличие от Action Sheet, лист может содержать сложный интерфейс: поля ввода, списки, кнопки.\n\nПоказывайте не более одного листа одновременно. Если лист можно закрыть без сохранения — добавляйте «Отмена» слева и «Готово» справа, и не полагайтесь только на кнопку «Готово»: давайте и другой способ закрыть лист, например смахиванием вниз.\n\nДля листов с изменяемой высотой (detents) добавляйте вверху полоску-«ручку» — так понятно, что высоту можно менять свайпом.' },
+    { type:'image', src:'assets/sheets-doc-medium.png', alt:'Лист высотой Medium — занимает примерно половину экрана' },
+    { type:'image', src:'assets/sheets-doc-large.png', alt:'Лист высотой Large — занимает почти весь экран', caption:'Выбирайте высоту листа под задачу: Medium — для быстрых действий, Large — для более сложных' },
+    { type:'image', src:'assets/sheets-alternative-done.png', alt:'Схема листа: ручка для свайпа сверху, кнопки закрытия и подтверждения по бокам', caption:'Ручка сверху и смахивание вниз — альтернативный способ закрыть лист, помимо кнопки «Готово»' },
+    { type:'heading', text:'Несколько шагов в одном листе' },
+    { type:'text', text:'Если лист состоит из нескольких шагов, на первом показывайте кнопку закрытия (✕) слева, а на последующих — кнопку «Назад» вместо крестика. Кнопку подтверждения справа делайте неактивной, пока шаг не завершён, и включайте её только на последнем шаге.' },
+    { type:'image', src:'assets/sheets-step-first.png', alt:'Первый шаг: кнопка закрытия слева, кнопка подтверждения ещё неактивна', caption:'Первый шаг' },
+    { type:'image', src:'assets/sheets-step-next.png', alt:'Промежуточный шаг: кнопка «Назад» вместо крестика', caption:'Промежуточный шаг' },
+    { type:'image', src:'assets/sheets-step-final.png', alt:'Последний шаг: кнопка подтверждения стала активной', caption:'Последний шаг — подтверждение активно' },
+    { type:'heading', text:'Немодальность' },
+    { type:'text', text:'Лист не блокирует остальной интерфейс: пока он открыт, можно продолжать взаимодействовать с контентом позади него.' },
+    { type:'image', src:'assets/sheets-notes-format.png', alt:'Лист форматирования в Заметках поверх выделенного текста', caption:'Лист форматирования в Заметках позволяет применять форматирование к выделенному тексту прямо в редакторе' },
+    { type:'image', src:'assets/sheets-notes-nonmodal.png', alt:'Другой фрагмент текста выделен при открытом листе форматирования', caption:'Поскольку лист немодальный, можно выделить другой фрагмент текста, не закрывая его' }
+  ]},
+  'widgets': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/widgets-figma-1.png', alt:'Виджеты размера Small и Medium из Figma', caption:'Widgets Small, Widgets Medium' },
+    { type:'image', src:'assets/widgets-figma-2.png', alt:'Виджеты размера Large и XL из Figma', caption:'Widgets Large, Widgets XL' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Начните с одной простой идеи, тесно связанной с целью приложения, и показывайте в виджете только то, что с ней связано. Если делаете несколько размеров — не растягивайте контент меньшего на весь размер большего, а подберите свой набор данных под каждый.\n\nВиджет должен давать полезное действие или актуальную информацию, а не служить обычным ярлыком для запуска приложения — тогда его охотнее оставляют на экране.\n\nНа экране блокировки виджет тоже должен нести пользу сам по себе, а не быть просто ещё одним способом открыть приложение.' },
+    { type:'image', src:'assets/widgets-apple-preview.png', alt:'Пример виджета Погода', size:'small', caption:'Людей, использующих «Погоду», больше всего интересуют текущие высокие и низкие температуры и погодные условия — этой информации виджет и отдаёт приоритет' },
+    { type:'image', src:'assets/widgets-apple-lockscreen.png', alt:'Виджеты на экране блокировки iPhone', caption:'На экране блокировки виджеты дают быстрый доступ к информации, не открывая приложение' },
+    { type:'image', src:'assets/widgets-apple-gallery.png', alt:'Экраны добавления виджета с описанием в галерее', caption:'Под группой виджетов в галерее появляется кнопка «Добавить» — её цвет можно настроить под цвет бренда' }
+  ]},
+  'controls': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/controls-size-1x1.png', alt:'Control размера 1×1 в виде круглой кнопки Lock Rotation — обычное и выбранное состояние' },
+    { type:'image', src:'assets/controls-size-2x1.png', alt:'Controls размера 2×1 в виде капсулы с вариантами подписи: заголовок, заголовок с деталью, заголовок с шевроном — обычное и выбранное состояние' },
+    { type:'image', src:'assets/controls-size-2x2.png', alt:'Controls размера 2×2 с иконкой, заголовком и деталью — обычное и выбранное состояние' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'У control есть символ-иконка, заголовок и необязательное значение, но показываются они по-разному в зависимости от места: в Control Center видна иконка, а на крупных размерах — ещё заголовок со значением; на экране блокировки — только иконка; в Динамическом острове при использовании Action Button — иконка и значение.\n\nИконку стройте на SF Symbols и выберите цвет тонирования под бренд — им подсвечивается включённое состояние переключателя. Доступны размеры 1×1, 2×1 и 2×2. Для приватности заголовок и значение можно скрывать на заблокированном экране, а действия, влияющие на безопасность, — защищать подтверждением личности.' },
+    { type:'image', src:'assets/controls-anatomy.png', alt:'Анатомия control размера 2×1: символ-иконка слева, заголовок сверху справа и значение снизу', caption:'Символ-иконка, заголовок и значение — основные элементы control' },
+    { type:'image', src:'assets/controls-control-center.png', alt:'Control Center с добавленными controls: авиарежим, AirDrop, Wi-Fi, сотовая связь, Bluetooth, плеер с треком, фонарик, беззвучный режим, регуляторы яркости и громкости', caption:'Control-переключатель в Control Center' },
+    { type:'image', src:'assets/controls-lock-screen.png', alt:'Экран блокировки iPhone с controls фонарика и беззвучного режима в нижних углах', caption:'Control-переключатель на экране блокировки' },
+    { type:'image', src:'assets/controls-dynamic-island.png', alt:'Динамический остров показывает статус «Silent» после переключения control через Action Button', caption:'Control-переключатель в Динамическом острове при использовании Action Button' },
+    { type:'image', src:'assets/controls-lightbulb-not-tinted.png', alt:'Control с иконкой лампочки без тонирования — монохромный символ в выключенном состоянии', caption:'Без тонирования, в выключенном состоянии' },
+    { type:'image', src:'assets/controls-lightbulb-tinted.png', alt:'Control с иконкой лампочки с тонированием — жёлтый цвет символа во включённом состоянии', caption:'С тонированием, во включённом состоянии' },
+    { type:'image', src:'assets/controls-action-button-off.png', alt:'Подсказка при удержании Action Button: «Hold for Ring» — control ещё не включён', caption:'Подсказка «Hold for Ring» при удержании Action Button' },
+    { type:'image', src:'assets/controls-action-button-on.png', alt:'Подсказка при удержании Action Button: «Hold for Silent» — control уже включён', caption:'Подсказка «Hold for Silent», когда control уже включён' },
+  ]},
+  'toolbars': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/toolbars-figma-top.png', alt:'Варианты верхней панели инструментов из Figma', caption:'Toolbar - Top - iPhone' },
+    { type:'image', src:'assets/toolbars-figma-bottom.png', alt:'Варианты нижней панели инструментов из Figma', caption:'Toolbar - Bottom - iPhone' },
+    { type:'image', src:'assets/toolbars-figma-light.png', alt:'Toolbar в светлой теме из Figma', caption:'Toolbars Light' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Отдавайте приоритет командам, которые нужны чаще всего, и не перегружайте панель — люди должны без труда различать и нажимать каждый элемент.\n\nСвязанные по смыслу элементы объединяйте в отдельные группы — например, отмену и повтор действия отдельно от разметки и меню «Ещё».\n\nДелайте значение каждого элемента понятным сразу: используйте системные символы SF Symbols или короткие подписи-глаголы, не заставляя человека гадать или пробовать.' },
+    { type:'image', src:'assets/toolbars-apple-grouping-1.png', alt:'Группировка элементов панели: отмена/повтор отдельно от разметки', caption:'Отмена и повтор — в одной группе, разметка и «Ещё» — в другой' },
+    { type:'image', src:'assets/toolbars-apple-grouping-2.png', alt:'Группировка элементов панели: Изменить отдельно от Поделиться', caption:'Кнопка «Изменить» вынесена отдельно от кнопки «Поделиться»' }
+  ]},
+  'toggles': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/toggles-figma-1.png', alt:'Состояния свитча из Figma', caption:'Toggle Switch' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'На iOS используйте свитч только в строке списка — контекст строки уже объясняет, что именно он переключает, отдельная подпись не нужна.\n\nСтандартный зелёный цвет подходит в большинстве случаев. Если меняете его на акцентный цвет приложения, убедитесь, что между включённым и выключенным состоянием сохраняется заметный контраст.\n\nВне списка — например, в панели инструментов — используйте вместо свитча кнопку с иконкой, которая меняет вид в зависимости от состояния, а не свитч.' },
+    { type:'image', src:'assets/toggles-apple-default.png', alt:'Свитч стандартного зелёного цвета', caption:'Стандартный зелёный цвет свитча хорошо работает в большинстве случаев' },
+    { type:'image', src:'assets/toggles-apple-custom.png', alt:'Свитч акцентного цвета приложения', caption:'Акцентный цвет приложения — с сохранением контраста между состояниями' },
+    { type:'image', src:'assets/toggles-apple-button-1.png', alt:'Приложение Телефон, выбран фильтр «Все»' },
+    { type:'image', src:'assets/toggles-apple-button-2.png', alt:'Приложение Телефон, выбран фильтр «Пропущенные»', caption:'Вне списка — как здесь, в панели над списком вызовов — используется кнопка-переключатель, а не свитч' }
+  ]},
+  'text-fields': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/text-fields-figma-light.png', alt:'Поля ввода в светлой теме из Figma', caption:'Light examples' },
+    { type:'image', src:'assets/text-fields-figma-dark.png', alt:'Поля ввода в тёмной теме из Figma', caption:'Dark examples' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Подбирайте размер поля под ожидаемый объём текста — по размеру поля человек визуально оценивает, сколько нужно ввести.\n\nЕсли полей несколько, располагайте их вертикально друг под другом и выравнивайте по ширине — так форма выглядит аккуратнее и понятнее.' },
+    { type:'heading', text:'Перенос длинного текста' },
+    { type:'text', text:'Если текст не помещается в поле, по умолчанию он обрезается по границе. Также можно перенести его на новую строку или усечь многоточием — в начале, середине или конце.' },
+    { type:'image', src:'assets/text-fields-clipped.png', alt:'Текст обрезан по границе поля', caption:'Обрезка по границе поля — поведение по умолчанию' },
+    { type:'image', src:'assets/text-fields-wrapped.png', alt:'Текст перенесён на новую строку', caption:'Перенос на новую строку' },
+    { type:'image', src:'assets/text-fields-truncated.png', alt:'Текст усечён многоточием', caption:'Усечение многоточием' },
+    { type:'heading', text:'Форматированный ввод' },
+    { type:'text', text:'Для чисел используйте форматирование — например, разделители разрядов или знак валюты. Не полагайтесь на один и тот же вид формата везде: он меняется в зависимости от языка и региона устройства.' },
+    { type:'image', src:'assets/text-fields-formatted.png', alt:'Числовое и денежное форматирование', caption:'Число и валюта с учётом форматирования' }
+  ]},
+  'tab-bars': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/tab-bars-figma-default.png', alt:'Таб-бар с разным числом вкладок', caption:'Tab Bar - iPhone Default' },
+    { type:'image', src:'assets/tab-bars-figma-search.png', alt:'Таб-бар с отдельной кнопкой поиска', caption:'Tab Bar - iPhone Search Role' },
+    { type:'image', src:'assets/tab-bars-button-states.png', alt:'Состояния кнопки вкладки', caption:'Обычное и выбранное состояние — в светлой и тёмной теме' },
+    { type:'image', src:'assets/tab-bars-button-search-states.png', alt:'Состояния кнопки поиска', caption:'Кнопка поиска повторяет те же состояния' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Анатомия' },
+    { type:'image', src:'assets/tab-bars-anatomy.png', alt:'Иконка и подпись вкладки' },
+    { type:'text', text:'У каждой вкладки есть иконка и короткая подпись. Иконки лучше делать на основе SF Symbols — они хорошо масштабируются и одинаково чётко выглядят при любом размере таб-бара.\n\nSF Symbols — библиотека из тысяч готовых векторных значков от Apple, которые можно вставлять как иконки в тулбарах, таб-барах, меню и прямо в тексте. Такие значки сами подстраиваются под насыщенность и размер соседнего шрифта.' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Используйте таб-бар для навигации между разделами приложения, а не для действий над текущим экраном — для этого нужен тулбар.\n\nДержите таб-бар видимым во всех разделах приложения; скрывайте его только под модальным экраном.\n\nИспользуйте столько вкладок, сколько нужно для навигации, но обычно не больше пяти — лишние уходят в раздел «Ещё», куда сложнее заглянуть.\n\nНе отключайте и не скрывайте кнопки вкладок, даже если раздел временно пуст, — объясните пустоту внутри самого раздела.\n\nДавайте каждой вкладке короткое, понятное название.' },
+    { type:'heading', text:'Кнопка поиска' },
+    { type:'text', text:'Если в приложении есть отдельный раздел поиска, его можно вынести отдельной круглой кнопкой рядом с таб-баром — так поиск всегда остаётся под рукой.' },
+    { type:'heading', text:'Прикреплённый аксессуар' },
+    { type:'text', text:'Над таб-баром можно закрепить аксессуар — например, мини-плеер, как в приложении Музыка. Он остаётся на экране при переключении между вкладками. Когда таб-бар сворачивается при прокрутке контента, аксессуар сжимается и встаёт в один ряд с вкладками.' },
+    { type:'image', src:'assets/tab-bars-accessory-expanded.png', alt:'Аксессуар в развёрнутом виде над таб-баром', caption:'Развёрнутый аксессуар — мини-плеер над таб-баром' },
+    { type:'image', src:'assets/tab-bars-accessory-minimized.png', alt:'Аксессуар в свёрнутом виде рядом с таб-баром', caption:'При сворачивании таб-бара аксессуар встраивается в одну строку с ним' }
+  ]},
+  'steppers': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/steppers-figma-light.png', alt:'Степпер в светлой теме', caption:'Light Examples' },
+    { type:'image', src:'assets/steppers-figma-dark.png', alt:'Степпер в тёмной теме', caption:'Светлая и тёмная версии одного и того же степпера' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Для больших изменений добавьте рядом текстовое поле для точного ввода: степпер удобен для мелких шагов, поле — для конкретного числа (например, на экране печати — количество копий).' }
+  ]},
+  'status-bars': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/status-bars-figma.png', alt:'Компонент Status Bar из Figma', caption:'Status bar - iPhone' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Не заменяйте системную строку состояния собственной — люди ожидают, что она выглядит одинаково во всех приложениях. Стиль текста и значков (светлый или тёмный) можно задать глобально для приложения или отдельно для каждого экрана: тёмный вариант хорошо читается на светлом фоне, светлый — на тёмном. Не размещайте под строкой состояния интерактивный контент — это создаёт впечатление, что по ней можно нажать. Скрывайте её только временно, например при просмотре фото на весь экран, и дайте человеку простой способ вернуть её обратно — например, одним касанием.' },
+    { type:'image', src:'assets/status-bars-hidden.png', alt:'Фото на весь экран в приложении Фото со скрытой строкой состояния', caption:'Полноэкранный просмотр фото — строка состояния скрыта, ничто не отвлекает от контента' },
+    { type:'image', src:'assets/status-bars-visible.png', alt:'То же фото в приложении Фото с показанной строкой состояния и панелью навигации', caption:'Одно касание возвращает строку состояния вместе с панелью навигации' }
+  ]},
+  'sliders': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/sliders-figma-light.png', alt:'Слайдер в светлой теме', caption:'Light examples' },
+    { type:'image', src:'assets/sliders-figma-dark.png', alt:'Слайдер в тёмной теме', caption:'Светлая и тёмная версии одного и того же слайдера' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Настраивайте вид слайдера, если это добавляет пользы: цвет трека, изображение бегунка, иконки по краям — так интерфейс лучше сообщает смысл значения. Например, слайдер размера изображения можно обозначить маленькой и крупной иконкой по краям.\n\nНе используйте обычный слайдер для регулировки громкости звука — для этого в системе есть специальный элемент управления громкостью.' }
+  ]},
+  'segmented-controls': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/segmented-controls-figma.png', alt:'Компонент Segmented Control из Figma — активное и задизейбленное состояния', caption:'Segmented Control' },
+    { type:'image', src:'assets/segmented-controls-light.png', alt:'Варианты segmented control с разным числом сегментов в светлой теме', caption:'Число сегментов и ширину подписей можно адаптировать под контент' },
+    { type:'image', src:'assets/segmented-controls-dark.png', alt:'Те же варианты в тёмной теме', caption:'Светлая и тёмная версии одного и того же компонента' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Segmented control показывает тесно связанные между собой варианты, которые влияют на объект, состояние или экран — например, переключают режим просмотра. Не используйте его для действий вроде добавления, удаления или редактирования контента — для этого есть кнопки.\n\nВыбор может быть одиночным (например, выравнивание текста) или множественным, когда можно включить сразу несколько сегментов (например, одновременно жирный и курсивный стиль).\n\nВ одном контроле используйте либо текст, либо изображения — не смешивайте их, и делайте подписи сегментов примерно одинаковой длины. На iPhone ограничивайте число сегментов примерно пятью, иначе контролом становится неудобно пользоваться.\n\nНе размещайте segmented control в тулбаре: тулбар предназначен для действий, а не для переключения контекста.' },
+    { type:'image', src:'assets/segmented-controls-health.png', alt:'Segmented control с выбором периода в приложении Активность', caption:'В приложении «Активность» segmented control предлагает выбор периода времени для отображения графиков активности' },
+    { type:'image', src:'assets/segmented-controls-calendar.png', alt:'Segmented control «Event / Reminder» в Календаре', caption:'В Календаре segmented control переключает между созданием события и напоминания, меняя тип создаваемого объекта' }
+  ]},
+  'progress-indicators': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/progress-indicators-figma-light.png', alt:'Линейный индикатор прогресса и спиннер в светлой теме', caption:'Light examples' },
+    { type:'image', src:'assets/progress-indicators-figma-dark.png', alt:'Те же индикаторы в тёмной теме', caption:'Светлая и тёмная версии индикаторов — линейного с прогрессом и спиннера' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Progress indicator показывает, что приложение работает, пока грузится контент или идёт долгая операция, — и сколько ещё ждать.\n\nДва типа: determinate — заполняется слева направо (линейный) или по часовой стрелке (круглый) и показывает долю выполненного, когда время операции известно. Indeterminate (спиннер) — просто анимируется, без информации о времени.\n\nГде можно — используйте determinate: так понятнее, сколько осталось. Прогресс должен отражать реальный ход операции, без рывков. Пока процесс идёт — индикатор анимирован, иначе выглядит как зависание. Не переключайте вид индикатора внутри одной операции.\n\nПодписывайте понятно — не «Loading», а суть операции. По возможности давайте отменить операцию. В тулбаре скрывайте незаполненную часть индикатора.\n\nСпиннер хорош для фона и тесных мест. Pull-to-refresh — свайп вниз для мгновенной перезагрузки контента.' },
+    { type:'image', src:'assets/progress-indicators-determinate-bar.png', alt:'Линейный индикатор с прогрессом (determinate)', size:'small', caption:'Линейный вид индикатора с прогрессом' },
+    { type:'image', src:'assets/progress-indicators-determinate-circle.png', alt:'Круглый индикатор с прогрессом (determinate)', size:'small', caption:'Круглый вид индикатора с прогрессом — заполняется по часовой стрелке' }
+  ]},
+  'pop-up-buttons': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/pop-up-buttons-figma.png', alt:'Компонент Pop-up Button из Figma — активное и задизейбленное состояния', caption:'Popup Button' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Используйте pop-up button, когда нужно выбрать один вариант из списка, например периодичность повтора события. Если вместо выбора значения нужен список действий, возможность отметить сразу несколько пунктов или подменю — это задача для Pull-Down Button, а не для pop-up button.\n\nДобавляйте рядом с кнопкой короткую подпись, поясняющую, что именно выбирают (например, «Повтор»), а название самой кнопки пусть отражает текущее значение («Никогда», «Каждую неделю» и т.д.). Показывайте небольшой значок с двумя шевронами — так понятно, что элемент можно раскрыть.' },
+    { type:'image', src:'assets/pop-up-buttons-closed.png', alt:'Pop-up button «Repeat» со значением Never в приложении Календарь', caption:'В Календаре pop-up button «Repeat» показывает текущее значение — Never' },
+    { type:'image', src:'assets/pop-up-buttons-open.png', alt:'Открытое меню pop-up button с вариантами повтора', caption:'После нажатия открывается меню вариантов; текущий выбор отмечен галочкой' }
+  ]},
+  'notifications': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/notifications-figma-collapsed.png', alt:'Несколько свёрнутых уведомлений друг за другом', caption:'Notification - Collapsed' },
+    { type:'image', src:'assets/notifications-figma-collapsed-list.png', alt:'Уведомления в развёрнутом списке одно под другим', caption:'Notification - Collapsed - List' },
+    { type:'image', src:'assets/notifications-figma-content.png', alt:'Анатомия уведомления: заголовок, описание и область дополнительного контента', caption:'Content Background' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Способ и время показа уведомлений человек настраивает сам.\n\nДержите уведомления короткими и полезными — бесполезные или навязчивые просто отключат. Не дублируйте одно событие несколькими уведомлениями, не используйте их как инструкцию по приложению и не размещайте конфиденциальные данные.\n\nЗаголовок — с большой буквы у каждого слова, текст — полными предложениями. Если содержимое может быть скрыто (например, на заблокированном экране), заранее придумайте понятную заглушку.\n\nМожно добавить до четырёх кнопок быстрых действий — вместо открытия приложения. Разрушающее действие («Удалить») давайте только с понятным контекстом.\n\nБейдж — число на иконке — только для непрочитанных уведомлений, не для другой цифры вроде погоды или счёта.' },
+    { type:'image', src:'assets/notifications-lockscreen.png', alt:'Уведомление на заблокированном экране iPhone', caption:'На заблокированном экране уведомление показывает иконку, заголовок, текст и время' },
+    { type:'image', src:'assets/notifications-banner.png', alt:'Баннер уведомления поверх главного экрана iPhone', caption:'Во время использования устройства уведомление ненадолго появляется баннером сверху экрана' }
+  ]},
+  'color-wells': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/color-wells-picker-figma.png', alt:'Системный выбор цвета Colors: вкладки Grid, Spectrum и Sliders, палитра оттенков, ползунок прозрачности и недавно использованные цвета', caption:'Color Picker', size:'full' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Лучше использовать системный color picker: он даёт человеку знакомый, единообразный опыт и позволяет сохранять палитру цветов, доступную из любого приложения, — вместо того чтобы создавать свой интерфейс выбора цвета.' }
+  ]},
+  'activity-views': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/activity-views-dark-figma.png', alt:'Activity View на iPhone, тёмная тема: превью объекта сверху, быстрый доступ к контактам и приложениям, ниже — список действий', caption:'Dark examples' },
+    { type:'image', src:'assets/activity-views-light-figma.png', alt:'Activity View на iPhone, светлая тема: превью объекта сверху, быстрый доступ к контактам и приложениям, ниже — список действий', caption:'Light examples' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Открывается по нажатию кнопки Share, поверх текущего экрана.\n\nНе дублируйте действия, которые система уже предлагает, — иначе человеку будет непонятно, чем ваше действие отличается от системного. Для своих действий используйте символ SF Symbols и короткий заголовок-глагол, а не название компании.\n\nПоказывайте только действия, применимые к текущему контенту, — то, что не подходит, лучше исключить, чтобы не перегружать список.' },
+    { type:'image', src:'assets/activity-views-share-button.png', alt:'Кнопка Share в тулбаре приложения Notes — по нажатию на неё открывается Activity View', caption:'Кнопка Share, которая открывает Activity View' },
+    { type:'image', src:'assets/activity-views-share-sheet.png', alt:'Activity View, открытый поверх приложения Notes: контакты, приложения и список действий', caption:'Activity View, открытый по нажатию на Share' }
+  ]},
+  'buttons': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/buttons-dark-figma.png', alt:'Кнопки на тёмном фоне: заполненная и серая (тонированная), с текстом и в виде иконки, обычная и деструктивная', caption:'Dark examples' },
+    { type:'image', src:'assets/buttons-light-figma.png', alt:'Кнопки на светлом фоне: заполненная и серая (тонированная), с текстом и в виде иконки, обычная и деструктивная', caption:'Light examples' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Её функцию доносят три составляющих: стиль (размер, цвет и форма), содержимое (иконка и/или текстовая подпись) и роль — системное значение, которое может влиять на внешний вид.\n\nОбласть нажатия должна быть не меньше 44×44 pt. Для кастомной кнопки обязательно предусмотрите состояние нажатия — иначе она будет казаться неотзывчивой. Выделяйте акцентным цветом не больше одной-двух кнопок на экране, чтобы было ясно, какое действие главное.\n\nРоль бывает обычной, primary (наиболее вероятный выбор — акцентный цвет), destructive (разрушительное действие — системный красный) или cancel; не назначайте primary разрушительному действию. Пока действие выполняется, кнопка может ненадолго показать индикатор загрузки вместо текста.' },
+    { type:'image', src:'assets/buttons-roles-alert.png', alt:'Кнопки в алерте: Primary Button — акцентная заполненная, Destructive Button — красный текст, Secondary Button — нейтральная серая', caption:'В алерте роль кнопки видна по стилю: primary выделена цветом, destructive — красным текстом, secondary — нейтральная' },
+    { type:'image', src:'assets/buttons-loading.png', alt:'Кнопка «Checkout» меняется на «Checking out» с индикатором загрузки во время выполнения действия', caption:'Пока действие выполняется, кнопка показывает индикатор загрузки' }
+  ]},
+  'context-menus': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/context-menus-figma.png', alt:'Анатомия контекстного меню: пункты с иконками, деструктивное действие красным, недоступный пункт затемнён, подменю со стрелкой', caption:'Context Menu' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Вызывается долгим нажатием (Haptic Touch) или Force Touch на поддерживающих устройствах.\n\nПеред меню можно показать превью содержимого — так проще выбрать нужное действие. Пункты оформляются как в обычном меню: важные — вверху, деструктивные — красным, недоступные — затемнены; поддерживаются подменю.\n\nИспользуйте для быстрого доступа к частым действиям с элементом, не уводя человека на отдельный экран, — например, «Копировать» или «Удалить» для файла в списке.' }
+  ]},
+  'menus': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/menus-edit-dark.png', alt:'Edit Menu в тёмной теме', caption:'Edit Menu: Dark' },
+    { type:'image', src:'assets/menus-edit-light.png', alt:'Edit Menu в светлой теме: Cut, Copy, Paste и стрелка для перехода к дополнительным командам', caption:'Edit Menu: Light' },
+    { type:'image', src:'assets/menus-figma.png', alt:'Меню: сверху в один ряд вынесены Copy (с подсветкой активного пункта) и Select All, ниже — список Look Up, Translate, Search Web, отдельным блоком снизу — Share', caption:'Menu' },
+    { type:'image', src:'assets/menus-separator.png', alt:'Разделитель между группами пунктов меню', caption:'Separator' },
+    { type:'image', src:'assets/menus-text-selection.png', alt:'Edit Menu появляется над выделенным фрагментом текста', caption:'Text Selection' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Открывается по действию с элементом и экономит место на экране.\n\nПункты подписывайте глаголами или короткими фразами, в заголовочном регистре. Нужно уточнение — добавьте многоточие в конце. Недоступные пункты — затемняйте.\n\nВажные пункты — вверху: люди сканируют меню сверху вниз. Группы разделяйте линиями и следите, чтобы меню не было слишком длинным.\n\nПодменю — не больше одного уровня, примерно до пяти пунктов. Для переключаемых состояний — галочка или меняющаяся подпись.\n\nИконки — либо у всех пунктов, либо ни у одного.' },
+    { type:'heading', text:'Edit Menu' },
+    { type:'text', text:'Edit Menu появляется при удержании или двойном тапе по выделяемому тексту, текстовому полю или изображению и показывает команды для работы с выделением.\n\nПоказывайте только те команды, которые применимы к текущему выделению — например, не предлагайте Copy или Cut, если ничего не выделено.\n\nДобавляйте свои команды после системных, не перемешивая их — так меню остаётся предсказуемым. Подписывайте команды глаголами или короткими глагольными фразами в заголовочном регистре.' },
+    { type:'heading', text:'Размер меню' },
+    { type:'text', text:'Кроме обычного списка (Large, по умолчанию), доступны компактные раскладки — Small и Medium.' },
+    { type:'image', src:'assets/menus-layout-sizes.png', alt:'Сравнение трёх раскладок меню: Small — четыре иконки без подписей в ряд, Medium — три иконки с подписями в ряд, Large — обычный список', caption:'Small — только иконки; Medium — иконки с подписями; Large — обычный список', size:'full' }
+  ]},
+  'lists-and-tables': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/lists-row-figma.png', alt:'Анатомия строки списка: заголовок, детальный текст, иконка и индикатор раскрытия; вариант с подзаголовком', caption:'Row' },
+    { type:'image', src:'assets/lists-row-button-figma.png', alt:'Строки списка, оформленные как кнопки действий: обычное, деструктивное и отключённое состояния', caption:'Row - Button' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Текст строки держите коротким — так содержимое легче считывается с первого взгляда, без переносов и обрезки.\n\nДля навигации по иерархии используйте индикатор раскрытия (шеврон): он ведёт на следующий уровень, но не показывает деталей элемента. Для дополнительной информации о самом элементе, без перехода на новый экран, используйте кнопку info — она открывает подробности, а не иерархию.\n\nПозволяйте менять порядок строк перетаскиванием, даже если добавление и удаление недоступны, — это ценится само по себе. Для изменения списка обычно сначала нужно войти в режим редактирования.\n\nГруппируйте связанные строки в разделы — сгруппированный стиль отделяет группы данных заголовками и футерами, оставляя пространство между ними.\n\nДавайте понятную обратную связь при выборе строки: если выбор ведёт на новый экран, выделяйте выбранную строку постоянно; если выбор — это переключение опции, достаточно короткой подсветки и последующей отметки.' },
+    { type:'image', src:'assets/lists-disclosure-indicator.png', alt:'Список с индикаторами раскрытия — шевронами — в конце каждой строки', caption:'Индикатор раскрытия ведёт на следующий уровень иерархии, но не показывает деталей элемента' },
+    { type:'image', src:'assets/lists-info-button.png', alt:'Список с кнопками info в конце каждой строки', caption:'Кнопка info показывает подробности об элементе, но не поддерживает переход по иерархии' }
+  ]},
+  'virtual-keyboards': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/keyboards-type-figma.png', alt:'Клавиатура с панелью предиктивного ввода, кнопками эмодзи и диктовки', caption:'Keyboard Type: Lower Case' },
+    { type:'image', src:'assets/keyboards-accessory-find.png', alt:'Accessory bar для поиска и замены текста в светлой и тёмной теме', caption:'Accessory Bar - iPhone / Find and Replace' },
+    { type:'image', src:'assets/keyboards-accessory-find-only.png', alt:'Accessory bar для поиска текста без строки замены, в светлой и тёмной теме', caption:'Accessory Bar - iPhone / Find' },
+    { type:'image', src:'assets/keyboards-accessory-url.png', alt:'Accessory bar для ввода URL в светлой и тёмной теме', caption:'Accessory Bar - iPhone / URL' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Системная клавиатура подстраивается под контекст поля: раскладка и кнопка возврата могут меняться в зависимости от типа вводимых данных. Выбирайте тип клавиатуры, соответствующий ожидаемым данным, — так человеку не нужно переключаться между режимами вручную.\n\nНад клавиатурой можно разместить accessory view — дополнительную панель с элементами для текущего поля: стрелками навигации, кнопкой Done, полем Replace или подсказкой URL. Делайте такую панель короткой и по существу.\n\nНе перекрывайте клавиатуру и активное поле собственным интерфейсом — вся раскладка, включая строку предиктивного ввода, должна оставаться полностью видимой и доступной.' },
+    { type:'image', src:'assets/keyboards-fully-visible.png', alt:'Экран входа в аккаунт: поля Email и Password остаются видны над полностью открытой клавиатурой с панелью предиктивного ввода', caption:'Клавиатура и активное поле должны оставаться полностью видимыми — не закрывайте их своим интерфейсом' },
+    { type:'heading', text:'Типы клавиатур' },
+    { type:'text', text:'Система предлагает набор готовых клавиатур под конкретную задачу — например, с символом «@» для email или цифровую раскладку для PIN-кода. Выберите вариант ниже, чтобы посмотреть раскладку и назначение.' },
+    { type:'picker', options: [
+      { label:'ASCII Capable', image:'assets/keyboards-type-ascii.png', alt:'Клавиатура asciiCapable', text:'Клавиатура только со стандартными ASCII-символами, без эмодзи — когда важен обычный текст.' },
+      { label:'ASCII Capable Number Pad', image:'assets/keyboards-type-ascii-number-pad.png', alt:'Клавиатура asciiCapableNumberPad', text:'Цифровая клавиатура, которая выводит только ASCII-цифры.' },
+      { label:'Decimal Pad', image:'assets/keyboards-type-decimal-pad.png', alt:'Клавиатура decimalPad', text:'Цифровая клавиатура с точкой — для сумм и величин с десятичной частью.' },
+      { label:'Default', image:'assets/keyboards-type-default.png', alt:'Стандартная клавиатура default', text:'Обычная клавиатура с буквами, цифрами и символами — подходит для большинства текстовых полей.' },
+      { label:'Email Address', image:'assets/keyboards-type-email.png', alt:'Клавиатура emailAddress', text:'Клавиатура для email — с быстрым доступом к символам «@» и точке.' },
+      { label:'Name Phone Pad', image:'assets/keyboards-type-name-phone-pad.png', alt:'Клавиатура namePhonePad', text:'Буквенная клавиатура для ввода имени или номера телефона в одном поле.' },
+      { label:'Number Pad', image:'assets/keyboards-type-number-pad.png', alt:'Клавиатура numberPad', text:'Цифровая клавиатура без букв и символов — для ввода PIN-кода.' },
+      { label:'Numbers and Punctuation', image:'assets/keyboards-type-numbers-punctuation.png', alt:'Клавиатура numbersAndPunctuation', text:'Альтернативная раскладка с цифрами и пунктуацией — открывается сразу, без переключения на «123».' },
+      { label:'Phone Pad', image:'assets/keyboards-type-phone-pad.png', alt:'Клавиатура phonePad', text:'Цифровая клавиатура с раскладкой для набора номера телефона.' },
+      { label:'Twitter', image:'assets/keyboards-type-twitter.png', alt:'Клавиатура twitter', text:'Клавиатура с быстрым доступом к «@» и «#» — для постов в соцсетях.' },
+      { label:'URL', image:'assets/keyboards-type-url.png', alt:'Клавиатура URL', text:'Клавиатура для веб-адресов: точка, слэш и кнопка «.com» вместо пробела.' },
+      { label:'Web Search', image:'assets/keyboards-type-web-search.png', alt:'Клавиатура webSearch', text:'Клавиатура для поисковых запросов: точка на видном месте и кнопка перехода вместо Enter.' }
+    ]}
+  ]},
+  'pickers': { blocks: [
+    { type:'caption', text:'Из Figma-библиотеки iOS 27' },
+    { type:'image', src:'assets/pickers-light-figma.png', alt:'Date and Time Picker в компактном стиле со развёрнутым календарём и полем времени, светлая тема', caption:'Light examples' },
+    { type:'image', src:'assets/pickers-dark-figma.png', alt:'Date and Time Picker в компактном стиле со развёрнутым календарём и полем времени, тёмная тема', caption:'Dark examples' },
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Пикер подходит для среднего и большого числа вариантов — когда их слишком много для обычных кнопок, но ещё не настолько много, чтобы понадобился список с поиском по алфавиту. Если вариантов мало, лучше взять pull-down button (кнопку с выпадающим списком) — с пикером в этом случае будет слишком громоздко.\n\nЗначения в пикере должны идти в понятном порядке — например, страны по алфавиту. Так сразу ясно, где искать нужное.\n\nПоказывайте пикер рядом с полем, которое он меняет, — не уводите человека на отдельный экран ради одного выбора. Обычно он появляется снизу экрана или во всплывающем окне (поповере).\n\nЕсли пикер выбирает минуты, шаг между значениями должен делиться на 60 без остатка. Например, интервалы по 15 минут: 0, 15, 30, 45.' },
+    { type:'heading', text:'Date and Time Picker' },
+    { type:'text', text:'Отдельная разновидность пикера — специально для даты и/или времени. У него четыре режима: Date (только дата), Time (только время), Date and Time (дата и время вместе) и Countdown Timer (обратный отсчёт до 23 часов 59 минут). Важно: стили Inline и Compact не поддерживают режим Countdown Timer.\n\nНа iPhone можно выбрать один из стилей ниже.' },
+    { type:'image', src:'assets/pickers-date-compact.png', alt:'Compact-стиль: кнопка со значением даты, при нажатии открывается поповер с календарём и временем', caption:'Compact (компактный) — пикер открывается как поповер поверх контента' },
+    { type:'text', text:'Текущее значение показано в виде кнопки. Если по ней тапнуть, сверху появляется поповер с привычным редактором — календарём и колесом времени. Удобно, когда пикеру не нужно постоянно занимать место на экране.' },
+    { type:'image', src:'assets/pickers-date-inline.png', alt:'Inline-стиль: календарь отображается прямо в интерфейсе без дополнительного тапа', caption:'Inline (строчный, встроенный) — пикер открывается прямо в контенте' },
+    { type:'text', text:'Пикер — календарь для даты или колёсный пикер для времени — виден сразу, без лишнего тапа: он просто встроен в экран. Хорошо подходит, если выбор даты или времени — одна из главных задач на этом экране.' },
+    { type:'image', src:'assets/pickers-time-wheel.png', alt:'Wheels-стиль: классические прокручиваемые колёса со значениями времени', caption:'Wheels (колёсный) — ещё один пример встроенного пикера: использует колёса (барабаны) для выбора значений даты и времени' }
+  ]}
+};
+
+function renderInfoBlock(b, blockId){
+  if(b.type === 'caption') return `<div class="info-caption">${b.text}</div>`;
+  if(b.type === 'heading') return `<h3 class="info-subheading">${b.text}</h3>`;
+  if(b.type === 'text') return `<p class="info-paragraph">${b.text}</p>`;
+  if(b.type === 'image') return `<div class="info-image${b.size ? ' ' + b.size : ''}"><img src="${b.src}" alt="${b.alt}">${b.caption ? `<div class="info-image-cap">${b.caption}</div>` : ''}</div>`;
+  if(b.type === 'picker'){
+    const pid = blockId || ('picker-' + Math.random().toString(36).slice(2));
+    const defaultIdx = Math.max(0, b.options.findIndex(o => o.label === 'Default'));
+    const panels = b.options.map((o,i) => `<div class="picker-panel${i===defaultIdx?' active':''}"><div class="info-image"><img src="${o.image}" alt="${o.alt}"></div>${o.text ? `<p class="info-paragraph">${o.text}</p>` : ''}</div>`).join('');
+    const items = b.options.map((o,i) => `<button class="wheel-item${i===defaultIdx?' center':''}" onclick="selectWheel('${pid}', ${i}, true)">${o.label}</button>`).join('');
+    return `<div class="picker" id="${pid}" data-default-idx="${defaultIdx}"><div class="picker-panels">${panels}</div><div class="wheel-picker"><div class="wheel-track">${items}</div><div class="wheel-highlight"></div><div class="wheel-fade-top"></div><div class="wheel-fade-bottom"></div></div></div>`;
+  }
+  return '';
+}
+
+function selectWheel(pid, idx, shouldScroll){
+  const el = document.getElementById(pid);
+  if(!el) return;
+  const track = el.querySelector('.wheel-track');
+  const items = [...track.querySelectorAll('.wheel-item')];
+  idx = Math.max(0, Math.min(items.length - 1, idx));
+  if(shouldScroll){
+    track.scrollTo({ top: idx * items[0].offsetHeight, behavior: 'smooth' });
+  }
+  items.forEach((it,i) => it.classList.toggle('center', i === idx));
+  el.querySelectorAll('.picker-panel').forEach((p,i) => p.classList.toggle('active', i === idx));
+}
+
+function initWheelPicker(pid){
+  const el = document.getElementById(pid);
+  if(!el) return;
+  const track = el.querySelector('.wheel-track');
+  const items = [...track.querySelectorAll('.wheel-item')];
+  if(!items.length) return;
+  const itemH = items[0].offsetHeight || 34;
+  let settleTimer = null;
+  function updateFade(){
+    const raw = track.scrollTop / itemH;
+    items.forEach((it,i) => {
+      const dist = Math.abs(i - raw);
+      it.style.opacity = Math.max(0.3, 1 - dist * 0.4);
+    });
+  }
+  function settle(){
+    const raw = track.scrollTop / itemH;
+    selectWheel(pid, Math.round(raw), false);
+  }
+  track.addEventListener('scroll', () => {
+    updateFade();
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(settle, 120);
+  });
+  const startIdx = parseInt(el.getAttribute('data-default-idx'), 10) || 0;
+  track.scrollTop = startIdx * itemH;
+  updateFade();
+}
+
+function openInfo(componentId){
+  const info = INFO_CONTENT[componentId];
+  if(!info) return;
+  const cat = getCategory(state.categoryId);
+  const comp = cat.components.find(c => c.id === componentId);
+  document.getElementById('infoTitle').textContent = comp ? comp.name : 'Примеры';
+  document.getElementById('infoBody').innerHTML = info.blocks.map((b,i) => renderInfoBlock(b, `${componentId}-picker-${i}`)).join('');
+  showScreen('screen-info');
+  document.querySelectorAll('#infoBody .picker').forEach(p => initWheelPicker(p.id));
+}
+
+function renderStudyCard(){
+  const cat = getCategory(state.categoryId);
+  const comp = cat.components[state.index];
+  document.getElementById('studyTitle').textContent = 'Изучение';
+  document.getElementById('studyCounter').textContent = `${state.index+1} из ${cat.components.length}`;
+  renderCardVisual('studyCardIcon', comp.id);
+  const compCat = COMPONENT_CATEGORY[comp.id];
+  document.getElementById('studyCatBadge').textContent = compCat ? compCat.title : '';
+  document.getElementById('studyName').textContent = comp.name;
+  document.getElementById('studyDesc').textContent = comp.ru;
+  document.getElementById('studyPrev').disabled = state.index === 0;
+  const examplesBtn = document.getElementById('studyExamplesBtn');
+  if(INFO_CONTENT[comp.id]){
+    examplesBtn.disabled = false;
+    examplesBtn.setAttribute('onclick', `openInfo('${comp.id}')`);
+  } else {
+    examplesBtn.disabled = true;
+    examplesBtn.removeAttribute('onclick');
+  }
+}
+
+function studyStep(dir){
+  const cat = getCategory(state.categoryId);
+  if(dir === 1 && state.index === cat.components.length - 1){
+    clearProgress();
+    goCategory();
+    return;
+  }
+  state.index = Math.min(Math.max(state.index + dir, 0), cat.components.length - 1);
+  saveProgress();
+  renderStudyCard();
+}
+
+/* ---------- QUIZ MODE ---------- */
+function startQuiz(){
+  state.categoryId = currentCategoryForModeScreen;
+  state.mode = 'quiz';
+  state.index = 0;
+  const cat = DATA.find(c => c.id === state.categoryId);
+  state.quizIds = shuffledIds(cat.components);
+  state.quizResults = new Array(cat.components.length).fill(null);
+  saveProgress();
+  renderQuizCard();
+  showScreen('screen-quiz');
+}
+
+function buildGlobalQuizPool(n){
+  const all = [];
+  DATA.filter(cat => (cat.group || 'components') === 'components').forEach(cat => cat.components.forEach(c => all.push(c.id)));
+  for(let i = all.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all.slice(0, Math.min(n, all.length));
+}
+
+function startGlobalQuiz(){
+  currentCategoryForModeScreen = '__global__';
+  state.categoryId = '__global__';
+  state.mode = 'quiz';
+  state.index = 0;
+  state.globalIds = buildGlobalQuizPool(20);
+  state.quizResults = new Array(state.globalIds.length).fill(null);
+  saveProgress();
+  renderQuizCard();
+  showScreen('screen-quiz');
+}
+
+function repeatQuiz(){
+  if(currentCategoryForModeScreen === '__global__'){
+    startGlobalQuiz();
+  } else {
+    startQuiz();
+  }
+}
+
+function renderQuizCard(){
+  const cat = getCategory(state.categoryId);
+  const comp = cat.components[state.index];
+  document.getElementById('quizCounter').textContent = `${state.index+1} из ${cat.components.length}`;
+  renderCardVisual('quizCardIcon', comp.id);
+  const input = document.getElementById('quizInput');
+  input.value = '';
+  input.className = 'quiz-input';
+  input.disabled = false;
+  document.getElementById('quizHint').textContent = '';
+  document.getElementById('quizHint').className = 'quiz-hint';
+  document.getElementById('quizCheck').textContent = 'Проверить';
+  setTimeout(() => input.focus(), 50);
+}
+
+function normalize(s){
+  return s.trim().toLowerCase().replace(/\s+/g,' ');
+}
+
+/* ---------- FUZZY MATCH (tolerate small typos in quiz answers) ---------- */
+// Levenshtein distance with edit-operation backtrace between the typed
+// answer (a) and the expected name (b).
+function levenshteinOps(a, b){
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for(let i = 0; i <= m; i++) dp[i][0] = i;
+  for(let j = 0; j <= n; j++) dp[0][j] = j;
+  for(let i = 1; i <= m; i++){
+    for(let j = 1; j <= n; j++){
+      if(a[i-1] === b[j-1]){
+        dp[i][j] = dp[i-1][j-1];
+      } else {
+        dp[i][j] = 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
+      }
+    }
+  }
+  const ops = [];
+  let i = m, j = n;
+  while(i > 0 || j > 0){
+    if(i > 0 && j > 0 && a[i-1] === b[j-1] && dp[i][j] === dp[i-1][j-1]){
+      i--; j--;
+    } else if(i > 0 && j > 0 && dp[i][j] === dp[i-1][j-1] + 1){
+      ops.push({ type: 'sub', pos: j-1, expected: b[j-1], typed: a[i-1] });
+      i--; j--;
+    } else if(j > 0 && dp[i][j] === dp[i][j-1] + 1){
+      // letter exists in expected (b) but missing from the typed answer (a)
+      ops.push({ type: 'missing', pos: j-1, letter: b[j-1] });
+      j--;
+    } else if(i > 0 && dp[i][j] === dp[i-1][j] + 1){
+      // letter exists in the typed answer (a) but not in expected (b)
+      ops.push({ type: 'extra', pos: j, letter: a[i-1] });
+      i--;
+    } else {
+      break;
+    }
+  }
+  ops.reverse();
+  return { distance: dp[m][n], ops };
+}
+
+function positionPhrase(pos, len){
+  if(len <= 1) return '';
+  if(pos <= 0) return 'в начале';
+  if(pos >= len - 1) return 'на конце';
+  return 'в середине';
+}
+
+// Returns a friendly Russian message describing the typo if the typed
+// answer is close enough (1-2 character edits) to the expected name,
+// or null if it's an exact match or too different to count.
+function typoFeedback(answer, expected, originalName){
+  if(answer === expected) return null;
+  const { distance, ops } = levenshteinOps(answer, expected);
+  if(distance === 0 || distance > 2) return null;
+
+  if(ops.length === 1){
+    const op = ops[0];
+    const posPhrase = positionPhrase(op.pos, expected.length);
+    if(op.type === 'missing'){
+      return `не хватает «${op.letter}» ${posPhrase} слова ${originalName}, но в целом вариант верный!`;
+    }
+    if(op.type === 'extra'){
+      return `лишняя буква «${op.letter}» ${posPhrase} — в остальном верно, это ${originalName}!`;
+    }
+    if(op.type === 'sub'){
+      return `небольшая опечатка: «${op.typed}» вместо «${op.expected}» ${posPhrase} — но в целом верно, это ${originalName}!`;
+    }
+  }
+  return `пара небольших опечаток, но в целом вариант верный — это ${originalName}!`;
+}
+
+function quizCheck(){
+  const cat = getCategory(state.categoryId);
+  const comp = cat.components[state.index];
+  const input = document.getElementById('quizInput');
+  const checkBtn = document.getElementById('quizCheck');
+
+  // if already answered correctly, this button advances
+  if(input.classList.contains('correct')){
+    quizAdvance();
+    return;
+  }
+
+  const answer = normalize(input.value);
+  const expected = normalize(comp.name);
+  let isCorrect = answer.length > 0 && answer === expected;
+  let typoMessage = null;
+
+  if(!isCorrect && answer.length > 0){
+    typoMessage = typoFeedback(answer, expected, comp.name);
+    if(typoMessage) isCorrect = true;
+  }
+
+  if(isCorrect){
+    input.classList.remove('incorrect');
+    input.classList.add('correct');
+    input.disabled = true;
+    state.quizResults[state.index] = true;
+    document.getElementById('quizHint').textContent = typoMessage || 'Верно!';
+    document.getElementById('quizHint').className = typoMessage ? 'quiz-hint typo' : 'quiz-hint';
+    checkBtn.textContent = state.index === cat.components.length - 1 ? 'Результат' : 'Далее';
+    saveProgress();
+  } else {
+    input.classList.remove('correct');
+    input.classList.add('incorrect');
+    document.getElementById('quizHint').textContent = `Не совсем. Правильный ответ: ${comp.name}`;
+    document.getElementById('quizHint').className = 'quiz-hint reveal';
+    state.quizResults[state.index] = false;
+  }
+}
+
+function quizAdvance(){
+  const cat = getCategory(state.categoryId);
+  if(state.index === cat.components.length - 1){
+    showResult();
+    return;
+  }
+  state.index++;
+  saveProgress();
+  renderQuizCard();
+}
+
+function quizSkip(){
+  const cat = getCategory(state.categoryId);
+  if(state.quizResults[state.index] === null) state.quizResults[state.index] = false;
+  if(state.index === cat.components.length - 1){
+    showResult();
+    return;
+  }
+  state.index++;
+  saveProgress();
+  renderQuizCard();
+}
+
+document.getElementById('quizInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){ e.preventDefault(); quizCheck(); }
+});
+
+function showResult(){
+  const cat = getCategory(state.categoryId);
+  const correct = state.quizResults.filter(r => r === true).length;
+  document.getElementById('resultScore').textContent = `${correct} / ${cat.components.length}`;
+  document.getElementById('resultTotal').textContent = cat.components.length;
+  document.getElementById('resultCat').textContent = cat.title;
+  clearProgress();
+  showScreen('screen-result');
+}
+
+/* ---------- INIT ---------- */
+renderHome();
+</script>
+</body>
+</html>
