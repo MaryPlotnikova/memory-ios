@@ -2332,6 +2332,7 @@ function renderQuizCard(){
   document.getElementById('quizHint').textContent = '';
   document.getElementById('quizHint').className = 'quiz-hint';
   document.getElementById('quizCheck').textContent = 'Проверить';
+  document.getElementById('quizSkip').disabled = false;
   setTimeout(() => input.focus(), 50);
 }
 
@@ -2416,9 +2417,10 @@ function quizCheck(){
   const comp = cat.components[state.index];
   const input = document.getElementById('quizInput');
   const checkBtn = document.getElementById('quizCheck');
+  const skipBtn = document.getElementById('quizSkip');
 
-  // if already answered correctly, this button advances
-  if(input.classList.contains('correct')){
+  // if already answered (correct or not), this button advances instead
+  if(input.disabled){
     quizAdvance();
     return;
   }
@@ -2433,15 +2435,17 @@ function quizCheck(){
     if(typoMessage) isCorrect = true;
   }
 
+  // answer is locked in either way — no retrying after seeing the result
+  input.disabled = true;
+  skipBtn.disabled = true;
+  checkBtn.textContent = state.index === cat.components.length - 1 ? 'Результат' : 'Далее';
+
   if(isCorrect){
     input.classList.remove('incorrect');
     input.classList.add('correct');
-    input.disabled = true;
     state.quizResults[state.index] = true;
     document.getElementById('quizHint').textContent = typoMessage || 'Верно!';
     document.getElementById('quizHint').className = typoMessage ? 'quiz-hint typo' : 'quiz-hint';
-    checkBtn.textContent = state.index === cat.components.length - 1 ? 'Результат' : 'Далее';
-    saveProgress();
   } else {
     input.classList.remove('correct');
     input.classList.add('incorrect');
@@ -2449,6 +2453,7 @@ function quizCheck(){
     document.getElementById('quizHint').className = 'quiz-hint reveal';
     state.quizResults[state.index] = false;
   }
+  saveProgress();
 }
 
 function quizAdvance(){
