@@ -1393,7 +1393,8 @@ const FLASHCARD_IMAGES = {
   'controls': 'assets/controls-flashcard.png',
   'lists-and-tables': 'assets/lists-flashcard.png',
   'virtual-keyboards': 'assets/keyboards-flashcard.png',
-  'pickers': 'assets/pickers-flashcard.png'
+  'pickers': 'assets/pickers-flashcard.png',
+  'live-activities': 'assets/live-activities-flashcard.png'
 };
 function renderCardVisual(elId, compId){
   const el = document.getElementById(elId);
@@ -1473,7 +1474,8 @@ const QUIZ_HINTS = {
   'notifications': 'Системное сообщение о событии за пределами приложения.',
   'status-bars': 'Полоса вверху экрана со временем, зарядом и связью.',
   'widgets': 'Компонент с актуальным контентом на главном экране или экране блокировки.',
-  'controls': 'Элемент, который выполняет действие приложения без его запуска.'
+  'controls': 'Элемент, который выполняет действие приложения без его запуска.',
+  'live-activities': 'Отслеживание задачи или события в реальном времени — на экране блокировки, в Dynamic Island и StandBy.'
 };
 
 /* ---------- DATA ---------- */
@@ -1589,7 +1591,9 @@ const DATA = [
       { id: 'widgets', name: 'Widgets',
         ru: 'Widgets (виджет) — это компонент с актуальным, легко считываемым контентом и быстрым доступом к функциям приложения — на главном экране, экране блокировки или в «Сегодня». Хороший виджет даёт полезную информацию, а не служит просто ярлыком для запуска приложения.' },
       { id: 'controls', name: 'Controls',
-        ru: 'Controls (элемент управления) – это небольшой элемент, который выполняет действие приложения прямо из Control Center (Центр управления), с экрана блокировки или по удержанию Action Button (кнопки действия) – без запуска самого приложения. Бывает кнопкой или переключателем с двумя состояниями.' }
+        ru: 'Controls (элемент управления) – это небольшой элемент, который выполняет действие приложения прямо из Control Center (Центр управления), с экрана блокировки или по удержанию Action Button (кнопки действия) – без запуска самого приложения. Бывает кнопкой или переключателем с двумя состояниями.' },
+      { id: 'live-activities', name: 'Live Activities',
+        ru: 'Live Activities (живая активность) — это способ отслеживать прогресс задачи, события или процесса на экране блокировки, в Dynamic Island (Динамическом острове), StandBy и других системных местах — не открывая приложение. В отличие от push-уведомления, живая активность показывает частые обновления статуса на протяжении нескольких часов и позволяет взаимодействовать с информацией.' }
     ]
   },
   {
@@ -1986,6 +1990,19 @@ const INFO_CONTENT = {
     { type:'image', src:'assets/controls-lightbulb-tinted.png', alt:'Control с иконкой лампочки с тонированием — жёлтый цвет символа во включённом состоянии', caption:'С тонированием, во включённом состоянии' },
     { type:'image', src:'assets/controls-action-button-off.png', alt:'Подсказка при удержании Action Button: «Hold for Ring» — control ещё не включён', caption:'Подсказка «Hold for Ring» (удерживайте для звонка) при удержании Action Button' },
     { type:'image', src:'assets/controls-action-button-on.png', alt:'Подсказка при удержании Action Button: «Hold for Silent» — control уже включён', caption:'Подсказка «Hold for Silent» (удерживайте для беззвучного режима), когда control уже включён' },
+  ]},
+  'live-activities': { blocks: [
+    { type:'caption', text:'Из документации Apple' },
+    { type:'heading', text:'Анатомия' },
+    { type:'text', text:'Live Activity автоматически появляется в системных местах на разных устройствах: на iPhone и iPad — на экране блокировки, главном экране, в Dynamic Island (Динамическом острове) и StandBy; на Mac — в строке меню; на Apple Watch — в Smart Stack; в CarPlay — на приборной панели.' },
+    { type:'image', src:'assets/live-activities-example.png', alt:'Развёрнутая Live Activity службы доставки в Dynamic Island с именем курьера, рейтингом и временем прибытия заказа', caption:'Пример развёрнутой Live Activity на Dynamic Island — отслеживание доставки заказа' },
+    { type:'heading', text:'Представления' },
+    { type:'text', text:'В зависимости от места на экране система выбирает подходящее представление — Live Activity должна поддерживать их все.\n\nCompact (компактное) — в Dynamic Island, когда активна только одна Live Activity. Состоит из двух частей — по краям от TrueDepth-камеры, — которые читаются как единое целое.\n\nMinimal (минимальное) — когда одновременно активны несколько Live Activity: одна показывается прикреплённой к Dynamic Island, другая — отдельным кружком или овалом рядом.\n\nExpanded (развёрнутое) — появляется при удержании компактного или минимального представления, а также на экране блокировки в виде баннера — используйте похожий макет для Lock Screen.' },
+    { type:'image', src:'assets/live-activities-type-compact.png', alt:'Компактное представление Live Activity: отдельные элементы по краям от TrueDepth-камеры — ведущая и ведомая стороны', caption:'Compact (компактное представление)' },
+    { type:'image', src:'assets/live-activities-type-minimal.png', alt:'Минимальное представление Live Activity: прикреплённое к Dynamic Island и отдельное — когда активны сразу две активности', caption:'Minimal (минимальное представление)' },
+    { type:'image', src:'assets/live-activities-type-expanded.png', alt:'Развёрнутое представление Live Activity, целиком заполняющее область Dynamic Island', caption:'Expanded (развёрнутое представление)' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Используйте Live Activity для задач и событий с чётким началом и концом — трекинг доставки, live-счёт матча, таймер тренировки. Оптимальная продолжительность — до восьми часов.\n\nПоказывайте только самое важное — то, что нужно увидеть с одного взгляда. Полные детали доступны по тапу, который должен открывать приложение сразу в нужном месте.\n\nНе используйте Live Activity для рекламы и не показывайте конфиденциальные данные: она хорошо видна на экране блокировки и Always-On-дисплее. Чувствительную информацию скрывайте, оставляя нейтральную сводку.\n\nОбновляйте Live Activity только при появлении нового контента и присылайте алерт лишь для действительно важных изменений — не дублируйте его обычными push-уведомлениями.\n\nЗавершайте Live Activity сразу по окончании задачи; для сводки можно задать время автоматического скрытия — обычно 15\u201330 минут.' }
   ]},
   'toolbars': { blocks: [
     { type:'caption', text:'Из Figma-библиотеки iOS 27' },
