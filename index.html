@@ -558,6 +558,13 @@
     font-weight: 400;
   }
 
+  .quiz-description{
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    text-align: center;
+    margin: 14px 2px 0;
+  }
   .quiz-input-wrap{ margin-top: 22px; }
   .quiz-input{
     width:100%;
@@ -700,6 +707,7 @@
     </div>
     <div class="counter" id="quizCounter"></div>
     <div class="flash-card" id="quizCardIcon"></div>
+    <p class="quiz-description" id="quizDescription"></p>
     <div class="quiz-input-wrap">
       <input type="text" class="quiz-input" id="quizInput" placeholder="Название на английском" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <div class="quiz-hint" id="quizHint"></div>
@@ -2316,6 +2324,7 @@ function renderQuizCard(){
   const comp = cat.components[state.index];
   document.getElementById('quizCounter').textContent = `${state.index+1} из ${cat.components.length}`;
   renderCardVisual('quizCardIcon', comp.id);
+  document.getElementById('quizDescription').textContent = comp.ru || '';
   const input = document.getElementById('quizInput');
   input.value = '';
   input.className = 'quiz-input';
