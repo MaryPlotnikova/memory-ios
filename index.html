@@ -613,6 +613,15 @@
     background-clip: text;
     color: transparent;
   }
+  .result-score .result-score-total{
+    font-size: 20px;
+    font-weight: 600;
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    color: var(--text-secondary);
+    -webkit-text-fill-color: var(--text-secondary);
+  }
   .result-wrap p{ color: var(--text-secondary); font-size:15px; max-width: 280px; }
   .result-actions{ display:flex; gap:12px; width:100%; margin-top: 18px; }
 
@@ -736,7 +745,7 @@
     </div>
     <div class="result-wrap">
       <div class="result-score" id="resultScore"></div>
-      <p>правильных ответов из <span id="resultTotal"></span> в разделе «<span id="resultCat"></span>»</p>
+      <p>правильных ответов <span id="resultCatLabel"></span></p>
       <div class="result-actions">
         <button class="nav-btn secondary" onclick="repeatQuiz()">Повторить</button>
         <button class="nav-btn primary" onclick="goHome()">На главную</button>
@@ -2542,9 +2551,13 @@ document.getElementById('quizInput').addEventListener('keydown', (e) => {
 function showResult(){
   const cat = getCategory(state.categoryId);
   const correct = state.quizResults.filter(r => r === true).length;
-  document.getElementById('resultScore').textContent = `${correct} / ${cat.components.length}`;
-  document.getElementById('resultTotal').textContent = cat.components.length;
-  document.getElementById('resultCat').textContent = cat.title;
+  const total = cat.components.length;
+  document.getElementById('resultScore').innerHTML = `${correct}<span class="result-score-total"> / ${total}</span>`;
+  // 'Готовые элементы iOS' is currently the only top-level HIG section; when more
+  // sections are added, swap this constant for the active section's own title.
+  document.getElementById('resultCatLabel').innerHTML = cat.id === '__global__'
+    ? `в разделе «${cat.title}»`
+    : `в викторине «Готовые элементы iOS»`;
   clearProgress();
   showScreen('screen-result');
 }
