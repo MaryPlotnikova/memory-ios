@@ -672,7 +672,7 @@
         <div class="label"><strong>Изучение</strong><span>Карточки с описанием каждого компонента</span></div>
         <div class="chev">›</div>
       </button>
-      <button class="mode-btn" onclick="startGlobalQuiz()">
+      <button class="mode-btn" onclick="startGlobalQuiz('hig')">
         <div class="emoji-box"><svg width="22" height="20" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M26 13.3801C25.8378 13.9161 25.2686 14.2366 24.7164 13.9952L21.5195 12.601C21.1417 12.4363 20.9173 12.1094 20.927 11.7219C20.9367 11.3594 21.1579 11.0535 21.5195 10.8952L24.7164 9.50104C25.2686 9.26046 25.8386 9.57854 26.0008 10.1323L26.0008 13.3793L26 13.3801Z" fill="white"/>
 <path d="M-0.000426197 12.6567L8.55686 12.6551L8.85637 13.3736L2.80895 19.4097C1.18064 17.5061 0.206241 15.2102 -0.000426197 12.6567Z" fill="white"/>
@@ -1817,7 +1817,7 @@ function renderHome(){
 
   const quizRow = document.createElement('button');
   quizRow.className = 'quiz-all-row';
-  quizRow.onclick = () => startGlobalQuiz();
+  quizRow.onclick = () => startGlobalQuiz('global');
   quizRow.innerHTML = `
     <div class="icon-box"><svg width="24" height="22" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26 13.3801C25.8378 13.9161 25.2686 14.2366 24.7164 13.9952L21.5195 12.601C21.1417 12.4363 20.9173 12.1094 20.927 11.7219C20.9367 11.3594 21.1579 11.0535 21.5195 10.8952L24.7164 9.50104C25.2686 9.26046 25.8386 9.57854 26.0008 10.1323L26.0008 13.3793L26 13.3801Z" fill="#ffffff"/><path d="M-0.000426197 12.6567L8.55686 12.6551L8.85637 13.3736L2.80895 19.4097C1.18064 17.5061 0.20624 15.2102 -0.000426197 12.6567Z" fill="#ffffff"/><path d="M12.6797 8.54518L12.6797 7.93978e-08C15.1815 0.196172 17.5251 1.15846 19.4456 2.80534L13.399 8.83904L12.6797 8.54518Z" fill="#ffffff"/><path d="M12.6789 14.9712L13.3901 14.6507L19.4448 20.6925C17.5251 22.3386 15.1807 23.3001 12.6797 23.4978L12.6789 14.9712Z" fill="#ffffff"/><path d="M10.1456 8.84227L4.09739 2.80534C6.01713 1.15927 8.3607 0.196172 10.8633 0L10.8617 8.55729L10.1456 8.84227Z" fill="#ffffff"/><path d="M4.09739 20.6941L10.1448 14.658L10.8633 14.9567L10.8633 23.4979C8.38007 23.2977 6.05911 22.3652 4.09739 20.6941Z" fill="#ffffff"/><path d="M0.00522738 10.8419C0.188483 8.34822 1.16934 6.00788 2.80976 4.08975L8.85718 10.1259L8.55768 10.8427H0.00603546L0.00522738 10.8419Z" fill="#ffffff"/><path d="M14.9805 12.6559H19.2664C19.536 13.3825 20.0357 13.9201 20.73 14.2317L23.0461 15.2481C22.5601 16.7941 21.7908 18.1738 20.7324 19.4097L14.6858 13.3736L14.9797 12.6567L14.9805 12.6559Z" fill="#ffffff"/><path d="M19.272 10.8419H14.9708L14.6858 10.1267L20.7324 4.08975C21.79 5.32572 22.5577 6.70457 23.0445 8.25053L20.772 9.24673C20.0785 9.55431 19.557 10.0645 19.272 10.8419Z" fill="#ffffff"/><path d="M10.2578 11.7485C10.2578 12.5827 10.9355 13.259 11.7715 13.259C12.6075 13.259 13.2852 12.5827 13.2852 11.7485C13.2852 10.9143 12.6075 10.2381 11.7715 10.2381C10.9355 10.2381 10.2578 10.9143 10.2578 11.7485Z" fill="#ffffff"/></svg></div>
     <div class="label"><strong>Общая викторина</strong><span>10 случайных карточек из всех разделов</span></div>
@@ -2364,9 +2364,10 @@ function buildGlobalQuizPool(n){
   return all.slice(0, Math.min(n, all.length));
 }
 
-function startGlobalQuiz(){
+function startGlobalQuiz(scope){
   currentCategoryForModeScreen = '__global__';
   state.categoryId = '__global__';
+  state.quizScope = scope || 'global';
   state.mode = 'quiz';
   state.index = 0;
   state.globalIds = buildGlobalQuizPool(10);
@@ -2378,7 +2379,7 @@ function startGlobalQuiz(){
 
 function repeatQuiz(){
   if(currentCategoryForModeScreen === '__global__'){
-    startGlobalQuiz();
+    startGlobalQuiz(state.quizScope);
   } else {
     startQuiz();
   }
@@ -2553,11 +2554,13 @@ function showResult(){
   const correct = state.quizResults.filter(r => r === true).length;
   const total = cat.components.length;
   document.getElementById('resultScore').innerHTML = `${correct}<span class="result-score-total"> / ${total}</span>`;
-  // 'Готовые элементы iOS' is currently the only top-level HIG section; when more
-  // sections are added, swap this constant for the active section's own title.
-  document.getElementById('resultCatLabel').innerHTML = cat.id === '__global__'
-    ? `в разделе «${cat.title}»`
-    : `в викторине «Готовые элементы iOS»`;
+  // Quiz scope decides the caption, not the category id: the "Общая викторина"
+  // entry point and each top-level section's own quiz (for now, only "Готовые
+  // элементы iOS") currently draw from the same shuffled pool, and only diverge
+  // once more sections (e.g. Material Design) get their own question pools.
+  document.getElementById('resultCatLabel').innerHTML = state.quizScope === 'hig'
+    ? `в викторине «Готовые элементы iOS»`
+    : `в разделе «${cat.title}»`;
   clearProgress();
   showScreen('screen-result');
 }
