@@ -199,6 +199,18 @@
     display:flex; align-items:center; justify-content:center;
   }
 
+  /* Material Design section: purple palette, scoped so it never leaks into
+     the iOS section. --grad/--grad-plate/--accent drive nearly every colored
+     element in the app, so overriding them here re-themes the whole section. */
+  .quiz-all-row.material{
+    background: linear-gradient(135deg, #B69DF8 0%, #9A82DB 20%, #8A72C9 40%, #7A63BA 58%, #6C579E 78%, #6750A4 100%);
+  }
+  body.theme-material{
+    --grad: linear-gradient(135deg, #9A82DB 0%, #6750A4 100%);
+    --grad-plate: linear-gradient(135deg, #B69DF8 0%, #9A82DB 20%, #8A72C9 40%, #7A63BA 58%, #6C579E 78%, #6750A4 100%);
+    --accent: #6750A4;
+  }
+
   .subgrid{
     display:grid;
     grid-template-columns: 1fr 1fr;
@@ -672,7 +684,7 @@
         <div class="label"><strong>Изучение</strong><span>Карточки с описанием каждого компонента</span></div>
         <div class="chev">›</div>
       </button>
-      <button class="mode-btn" onclick="startGlobalQuiz('hig')">
+      <button class="mode-btn" onclick="startSectionQuiz()">
         <div class="emoji-box"><svg width="22" height="20" viewBox="0 0 26 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M26 13.3801C25.8378 13.9161 25.2686 14.2366 24.7164 13.9952L21.5195 12.601C21.1417 12.4363 20.9173 12.1094 20.927 11.7219C20.9367 11.3594 21.1579 11.0535 21.5195 10.8952L24.7164 9.50104C25.2686 9.26046 25.8386 9.57854 26.0008 10.1323L26.0008 13.3793L26 13.3801Z" fill="white"/>
 <path d="M-0.000426197 12.6567L8.55686 12.6551L8.85637 13.3736L2.80895 19.4097C1.18064 17.5061 0.206241 15.2102 -0.000426197 12.6567Z" fill="white"/>
@@ -1368,6 +1380,53 @@ const ICONS = {
     <circle cx="230" cy="150" r="70" fill="rgba(255,255,255,0.95)"/>
     <path d="M175 150 L205 150 L220 110 L240 190 L255 150 L285 150" fill="none" stroke="#c2503c" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
   `,
+  'md-buttons': `
+    <rect x="130" y="68" width="200" height="48" rx="24" fill="rgba(255,255,255,0.96)"/>
+    <text x="230" y="98" font-size="16" fill="#4b3a78" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Filled</text>
+    <rect x="130" y="128" width="200" height="48" rx="24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5"/>
+    <text x="230" y="158" font-size="16" fill="rgba(255,255,255,0.92)" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Outlined</text>
+    <text x="230" y="218" font-size="16" fill="rgba(255,255,255,0.85)" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Text button</text>
+  `,
+  'md-fab': `
+    <rect x="90" y="58" width="230" height="14" rx="7" fill="rgba(255,255,255,0.28)"/>
+    <rect x="90" y="88" width="170" height="10" rx="5" fill="rgba(255,255,255,0.2)"/>
+    <rect x="90" y="108" width="200" height="10" rx="5" fill="rgba(255,255,255,0.2)"/>
+    <circle cx="330" cy="190" r="50" fill="rgba(255,255,255,0.96)"/>
+    <path d="M330 165 L330 215 M305 190 L355 190" stroke="#6750A4" stroke-width="9" stroke-linecap="round"/>
+  `,
+  'md-navigation-bar': `
+    <rect x="50" y="60" width="360" height="130" rx="16" fill="rgba(255,255,255,0.16)"/>
+    <rect x="50" y="212" width="360" height="64" rx="20" fill="rgba(255,255,255,0.96)"/>
+    <circle cx="130" cy="244" r="15" fill="#6750A4"/>
+    <circle cx="230" cy="244" r="11" fill="rgba(103,80,164,0.35)"/>
+    <circle cx="330" cy="244" r="11" fill="rgba(103,80,164,0.35)"/>
+  `,
+  'md-cards': `
+    <rect x="70" y="45" width="320" height="118" rx="18" fill="rgba(255,255,255,0.96)"/>
+    <rect x="94" y="70" width="170" height="14" rx="7" fill="#d9cdf2"/>
+    <rect x="94" y="96" width="230" height="10" rx="5" fill="#ece5fa"/>
+    <rect x="94" y="116" width="190" height="10" rx="5" fill="#ece5fa"/>
+    <rect x="70" y="175" width="320" height="80" rx="18" fill="rgba(255,255,255,0.5)"/>
+  `,
+  'md-chips': `
+    <rect x="70" y="130" width="112" height="42" rx="21" fill="rgba(255,255,255,0.96)"/>
+    <text x="126" y="157" font-size="14" fill="#4b3a78" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Filter</text>
+    <rect x="196" y="130" width="92" height="42" rx="21" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2.5"/>
+    <text x="242" y="157" font-size="14" fill="rgba(255,255,255,0.92)" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Sort</text>
+    <rect x="302" y="130" width="90" height="42" rx="21" fill="rgba(255,255,255,0.4)"/>
+    <text x="347" y="157" font-size="14" fill="rgba(255,255,255,0.95)" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="600">Tag</text>
+  `,
+  'md-switch': `
+    <rect x="140" y="118" width="180" height="64" rx="32" fill="rgba(255,255,255,0.96)"/>
+    <circle cx="288" cy="150" r="28" fill="#6750A4"/>
+    <path d="M278 150 l7 7 l14 -15" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  `,
+  'md-progress-indicators': `
+    <circle cx="150" cy="150" r="58" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="13"/>
+    <circle cx="150" cy="150" r="58" fill="none" stroke="rgba(255,255,255,0.96)" stroke-width="13" stroke-dasharray="255 364" stroke-linecap="round" transform="rotate(-90 150 150)"/>
+    <rect x="245" y="144" width="145" height="12" rx="6" fill="rgba(255,255,255,0.3)"/>
+    <rect x="245" y="144" width="85" height="12" rx="6" fill="rgba(255,255,255,0.96)"/>
+  `,
 };
 function iconSvg(id, opacity){
   return `<svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg">${ICONS[id]}</svg>`;
@@ -1484,7 +1543,14 @@ const QUIZ_HINTS = {
   'status-bars': 'Полоса вверху экрана со временем, зарядом и связью.',
   'widgets': 'Компонент с актуальным контентом на главном экране или экране блокировки.',
   'controls': 'Элемент, который выполняет действие приложения без его запуска.',
-  'live-activities': 'Отслеживание задачи или события в реальном времени — на экране блокировки, в Dynamic Island и StandBy.'
+  'live-activities': 'Отслеживание задачи или события в реальном времени — на экране блокировки, в Dynamic Island и StandBy.',
+  'md-buttons': 'Элемент для одного действия одним нажатием — пять стилей по убыванию акцента.',
+  'md-fab': 'Самая заметная кнопка экрана, вынесенная поверх контента для главного действия.',
+  'md-navigation-bar': 'Панель из трёх-пяти вкладок внизу экрана для переключения между разделами.',
+  'md-cards': 'Контейнер для контента и действий на одну тему — с тенью, заливкой или обводкой.',
+  'md-chips': 'Компактный элемент для ввода, выбора, фильтрации или запуска действия.',
+  'md-switch': 'Мгновенно включает и выключает одну настройку без подтверждения.',
+  'md-progress-indicators': 'Временный индикатор статуса длительной операции — линейный или круговой.'
 };
 
 /* ---------- DATA ---------- */
@@ -1702,13 +1768,59 @@ const DATA = [
       { id: 'workouts', name: 'Workouts',
         ru: 'Workouts (тренировки) — это активности, во время которых люди могут брать с собой iPhone — на прогулках, пробежках и других занятиях. Можно создать опыт тренировки, используя данные об активности человека.' }
     ]
+  },
+  {
+    id: 'md-actions',
+    group: 'material-components',
+    title: 'Actions',
+    subtitle: 'Кнопки и плавающая кнопка действия',
+    components: [
+      { id: 'md-buttons', name: 'Buttons',
+        ru: 'Buttons (кнопки) — это элемент управления для одного из самых частых действий в интерфейсе: пять стилей с разной степенью акцента — приподнятая (elevated), заполненная (filled), тональная (tonal), контурная (outlined) и текстовая (text) — от самого заметного до наименее выделяющегося. Кнопка может содержать необязательную иконку и умеет работать как переключатель (toggle) для бинарного выбора.' },
+      { id: 'md-fab', name: 'Floating Action Button',
+        ru: 'Floating Action Button, FAB (плавающая кнопка действия) — это кнопка с самым сильным визуальным акцентом в интерфейсе, вынесенная поверх контента для главного действия экрана — например, «Написать» или «Создать». Бывает трёх размеров — обычная, средняя и большая — и не должна дублироваться на одном экране.' }
+    ]
+  },
+  {
+    id: 'md-navigation',
+    group: 'material-components',
+    title: 'Navigation',
+    subtitle: 'Панель навигации между разделами',
+    components: [
+      { id: 'md-navigation-bar', name: 'Navigation Bar',
+        ru: 'Navigation bar (панель навигации) — это панель из трёх-пяти вкладок в нижней части экрана для переключения между основными разделами приложения на телефонах и планшетах. У активной вкладки закрашенная иконка и капсула-индикатор, а сам набор вкладок остаётся неизменным на всех экранах.' }
+    ]
+  },
+  {
+    id: 'md-containment',
+    group: 'material-components',
+    title: 'Containment & Selection',
+    subtitle: 'Карточки, чипы и переключатели',
+    components: [
+      { id: 'md-cards', name: 'Cards',
+        ru: 'Cards (карточки) — это контейнер для контента и действий, связанных с одной темой, — например, статьи, товара или альбома. Есть три варианта: приподнятая (с тенью), заполненная (с закраской) и контурная (с обводкой) — выбор зависит только от нужного визуального акцента.' },
+      { id: 'md-chips', name: 'Chips',
+        ru: 'Chips (чипы) — это компактный элемент для ввода информации, выбора вариантов, фильтрации или запуска действия. Четыре вида: assist (умное действие), filter (фильтр списка), input (введённые пользователем данные, например контакт) и suggestion (подсказанный вариант ответа).' },
+      { id: 'md-switch', name: 'Switch',
+        ru: 'Switch (переключатель) — это элемент для мгновенного включения и выключения одной настройки, без отдельного подтверждения. Внутри бегунка может быть иконка, а включённое состояние отличается более крупным размером самого бегунка.' }
+    ]
+  },
+  {
+    id: 'md-communication',
+    group: 'material-components',
+    title: 'Communication',
+    subtitle: 'Индикаторы состояния и прогресса',
+    components: [
+      { id: 'md-progress-indicators', name: 'Progress Indicators',
+        ru: 'Progress indicators (индикаторы прогресса) — это временный элемент, который показывает статус длительной операции — загрузки, отправки формы, сохранения. Бывают линейными и круговыми, а также определёнными (известна доля выполнения) и неопределёнными (длительность заранее неизвестна).' }
+    ]
   }
 ];
 
 /* ---------- COMPONENT -> CATEGORY LOOKUP (for the study-card badge) ---------- */
 const COMPONENT_CATEGORY = {};
 DATA.forEach(cat => {
-  if((cat.group || 'components') === 'components'){
+  if((cat.group || 'components') === 'components' || cat.group === 'material-components'){
     cat.components.forEach(c => { COMPONENT_CATEGORY[c.id] = { id: cat.id, title: cat.title }; });
   }
 });
@@ -1757,6 +1869,15 @@ function getCategory(id){
         .flatMap(cat => cat.components)
     };
   }
+  if(id === '__material_study__'){
+    return {
+      id: '__material_study__',
+      title: 'Material Design',
+      subtitle: 'Изучение всех компонентов подряд',
+      components: DATA.filter(cat => cat.group === 'material-components')
+        .flatMap(cat => cat.components)
+    };
+  }
   const cat = DATA.find(c => c.id === id);
   // In quiz mode, show this category's cards in the shuffled order set up by startQuiz(),
   // instead of the fixed order used for Study mode.
@@ -1778,10 +1899,19 @@ function shuffledIds(components){
 }
 
 /* ---------- NAVIGATION HELPERS ---------- */
+const MATERIAL_THEMED_SCREENS = ['screen-category','screen-study','screen-quiz','screen-info','screen-result'];
+// Quiz/result screens always use categoryId '__global__' regardless of scope, so
+// they key off state.quizScope; study/category/info screens key off which
+// section's mode-select opened them (currentCategoryForModeScreen).
+function isMaterialContext(id){
+  if(id === 'screen-quiz' || id === 'screen-result') return state.quizScope === 'material';
+  return currentCategoryForModeScreen === '__material_study__';
+}
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+  document.body.classList.toggle('theme-material', MATERIAL_THEMED_SCREENS.includes(id) && isMaterialContext(id));
 }
 
 function goHome(){
@@ -1799,6 +1929,8 @@ function goCategory(){
   saveProgress();
   if(currentCategoryForModeScreen === '__global_study__'){
     openHigModeSelect();
+  } else if(currentCategoryForModeScreen === '__material_study__'){
+    openMaterialModeSelect();
   } else {
     goHome();
   }
@@ -1841,12 +1973,12 @@ function renderHome(){
   container.appendChild(higRow);
 
   const mdRow = document.createElement('button');
-  mdRow.className = 'quiz-all-row is-disabled';
-  mdRow.disabled = true;
+  mdRow.className = 'quiz-all-row material';
+  mdRow.onclick = () => openMaterialModeSelect();
   mdRow.innerHTML = `
     <div class="icon-box">${MATERIAL_ICON_SVG}</div>
     <div class="label"><strong>Material Design</strong><span>Открытая дизайн-система Google</span></div>
-    <div class="lock-badge">${LOCK_ICON_SVG}</div>
+    <div class="chev">›</div>
   `;
   container.appendChild(mdRow);
 
@@ -1901,16 +2033,33 @@ function openHigModeSelect(){
   showScreen('screen-category');
 }
 
+/* ---------- MODE SELECT (Material Design -> Изучение/Викторина) ---------- */
+function openMaterialModeSelect(){
+  currentCategoryForModeScreen = '__material_study__';
+  document.getElementById('catTitle').textContent = 'Material Design';
+  const catPreviewEl = document.getElementById('catPreview');
+  catPreviewEl.classList.add('has-image');
+  catPreviewEl.innerHTML = '<img src="assets/material-hero.png" alt="Material Design">';
+  showScreen('screen-category');
+}
+
+// The mode-select screen's Викторина button is shared by both sections; this
+// picks the right scope from whichever section's mode-select is currently open.
+function startSectionQuiz(){
+  startGlobalQuiz(currentCategoryForModeScreen === '__material_study__' ? 'material' : 'hig');
+}
+
 /* ---------- STUDY MODE ---------- */
 // Study is always global: it runs through every component from every
 // category as one continuous deck, with the originating section shown
 // as a small badge on the card (see COMPONENT_CATEGORY / .cat-badge).
 function startStudy(){
   const tappedCatId = currentCategoryForModeScreen;
-  currentCategoryForModeScreen = '__global_study__';
-  state.categoryId = '__global_study__';
+  const studyId = tappedCatId === '__material_study__' ? '__material_study__' : '__global_study__';
+  currentCategoryForModeScreen = studyId;
+  state.categoryId = studyId;
   state.mode = 'study';
-  const all = getCategory('__global_study__').components;
+  const all = getCategory(studyId).components;
   const startIdx = all.findIndex(c => COMPONENT_CATEGORY[c.id] && COMPONENT_CATEGORY[c.id].id === tappedCatId);
   state.index = startIdx >= 0 ? startIdx : 0;
   saveProgress();
@@ -2237,6 +2386,55 @@ const INFO_CONTENT = {
     { type:'image', src:'assets/pickers-date-inline.png', alt:'Inline-стиль: календарь отображается прямо в интерфейсе без дополнительного тапа', caption:'Inline (строчный, встроенный) — пикер открывается прямо в контенте' },
     { type:'text', text:'Пикер — календарь для даты или колёсный пикер для времени — виден сразу, без лишнего тапа: он просто встроен в экран. Хорошо подходит, если выбор даты или времени — одна из главных задач на этом экране.' },
     { type:'image', src:'assets/pickers-time-wheel.png', alt:'Wheels-стиль: классические прокручиваемые колёса со значениями времени', caption:'Wheels (колёсный) — ещё один пример встроенного пикера: использует колёса (барабаны) для выбора значений даты и времени' }
+  ]},
+  'md-buttons': { blocks: [
+    { type:'caption', text:'Из документации Material Design' },
+    { type:'text', text:'Кнопки — самый частый способ дать человеку выполнить действие одним нажатием. Пять стилей расположены по убыванию значимости: приподнятая (elevated) — с тенью, для действий на ярком фоне; заполненная (filled) — самая заметная, для главного действия на экране; тональная (filled tonal) — средний акцент, например «Далее» в онбординге; контурная (outlined) — для действий среднего приоритета рядом с заполненной кнопкой; текстовая (text) — для действий с наименьшим приоритетом, без фона в состоянии покоя.\n\nШирина кнопки подстраивается под текст подписи — она не должна быть уже надписи и не обрезает текст переносом на новую строку. Необязательная иконка ставится перед текстом.\n\nКнопки также умеют работать в режиме переключателя (toggle) — для бинарного выбора вроде «Сохранить» или «Нравится»: при выборе меняются цвет, форма (с круглой на квадратную) и, при необходимости, иконка.' },
+    { type:'image', src:'assets/md-buttons-hero.png', alt:'Пять стилей кнопок Material Design: приподнятая, заполненная, тональная, контурная и текстовая, пронумерованные от 1 до 5', caption:'Пять стилей кнопок по убыванию акцента: приподнятая, заполненная, тональная, контурная, текстовая' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Не перегружайте экран кнопками — для второстепенных действий лучше подойдут иконка-кнопка, чипы или текстовые ссылки. Используйте заполненный стиль экономно, обычно для одного действия на экране.\n\nПодпись пишите с заглавной только первое слово и имена собственные, коротко — в идеале 1–3 слова, — и никогда не переносите её на новую строку.\n\nКонтурный стиль легко спутать с чипом — если рядом уже есть чипы, замените контурную кнопку на тональную или заполненную.' }
+  ]},
+  'md-fab': { blocks: [
+    { type:'caption', text:'Из документации Material Design' },
+    { type:'text', text:'FAB — самая заметная кнопка в интерфейсе: она находится поверх контента и предназначена для одного главного действия экрана — создать, написать, поделиться. Три размера — обычная, средняя (рекомендуется чаще всего) и большая — выбираются в зависимости от того, насколько нужно подчеркнуть действие и сколько места на экране.\n\nFAB нужна не на каждом экране — например, если основное действие уже представлено изображением или другим элементом. На одном экране должна быть только одна FAB.\n\nПри прокрутке FAB остаётся на месте, а расширенная FAB (Extended FAB) с текстовой подписью может сворачиваться в обычную кнопку во время скролла и разворачиваться обратно у конца списка.' },
+    { type:'image', src:'assets/md-fab-hero.png', alt:'Три размера плавающей кнопки действия с разными иконками — карандаш, доступность и конверт', caption:'Три размера: обычная, средняя и большая FAB' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Используйте FAB для позитивных и конструктивных действий — создать, добавить в избранное, поделиться. Не используйте её для второстепенных или разрушительных действий вроде удаления или отправки в архив — для них подойдут другие элементы.\n\nИконка внутри FAB должна быть простой и однозначной; в вебе стоит дополнительно показывать всплывающую подпись при наведении.\n\nНе показывайте на экране больше одной FAB одновременно.' }
+  ]},
+  'md-navigation-bar': { blocks: [
+    { type:'caption', text:'Из документации Material Design' },
+    { type:'text', text:'Navigation bar размещается внизу экрана и даёт доступ к трём-пяти основным разделам приложения — на телефонах и планшетах. У каждого пункта есть иконка и текстовая подпись, а набор разделов остаётся неизменным на всех экранах приложения.\n\nУ активного пункта иконка становится закрашенной и появляется капсула-индикатор вокруг неё; у неактивных используется контурная иконка. Если разделов больше пяти, вместо панели навигации лучше использовать вкладки (tabs) или скрыть часть пунктов за иконкой меню.\n\nПанель навигации предназначена именно для переключения между основными разделами — не используйте её для доступа к отдельным задачам, вроде просмотра одного письма.' },
+    { type:'image', src:'assets/md-navigation-bar-hero.png', alt:'Панель навигации с четырьмя вкладками — Home, Browse, Radio, Library — в компактном и среднем вариантах', caption:'Панель навигации для компактных и средних окон' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Не убирайте подписи у пунктов навигации и не используйте панель для менее чем трёх разделов — в этом случае лучше подойдут вкладки.\n\nFAB, если она есть на экране, размещается поверх панели навигации, у правого края, и никогда не должна её закрывать.\n\nПанель может временно скрываться при прокрутке или показе клавиатуры, но не должна быть скрыта постоянно ни на одном из экранов.' }
+  ]},
+  'md-cards': { blocks: [
+    { type:'caption', text:'Из документации Material Design' },
+    { type:'text', text:'Карточка — контейнер для контента и действий на одну тему, например статьи, альбома или заказа. Единственный обязательный элемент — сам контейнер; всё остальное — изображение, заголовок, подзаголовок, вспомогательный текст, кнопки — добавляется по необходимости.\n\nЕсть три варианта: приподнятая (elevated) — с тенью, даёт среднюю степень отделения от фона; заполненная (filled) — с закраской фона, самая сдержанная; контурная (outlined) — с обводкой по краю, даёт наибольшее визуальное разделение. Функционально варианты одинаковы, разница только в акценте.\n\nКарточки можно группировать в сетку, вертикальный список или горизонтальную карусель — при этом они находятся на одной высоте (elevation), пока их не потянули или не взяли в руку.' },
+    { type:'image', src:'assets/md-cards-hero.png', alt:'Три варианта карточки: приподнятая с тенью, заполненная с закраской фона и контурная с обводкой', caption:'Три варианта: приподнятая, заполненная и контурная карточка' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Не превращайте в карточки контент, для которого хватило бы обычных отступов, заголовков или разделителей, — так возникает лишняя визуальная сложность.\n\nЕсли на карточку нужно поместить текст поверх изображения, убедитесь в достаточном контрасте — например, добавив полупрозрачную подложку под текст.\n\nУ карточки может быть только один жест смахивания с одним действием — не совмещайте с внутренней прокруткой контента, это приведёт к двойной полосе прокрутки.' }
+  ]},
+  'md-chips': { blocks: [
+    { type:'caption', text:'Из документации Material Design' },
+    { type:'text', text:'Chips помогают быстрее выполнить текущую задачу: ввести информацию, сделать выбор, отфильтровать контент или запустить действие. В отличие от кнопок, которые остаются на экране постоянно и ведут к следующему шагу, чипы появляются по ситуации и предлагают развилки в рамках задачи — поэтому чипы всегда показывают группой, а не по одному.\n\nЧетыре вида чипов: assist — предлагает «умное» действие, например «Добавить в календарь»; filter — фильтрует список или коллекцию, при выборе спереди появляется галочка; input — показывает введённые человеком данные, например email-адрес, превращённый в чип, с иконкой удаления; suggestion — подсказывает вариант ответа или действия, сгенерированный приложением.\n\nПодпись у чипа должна быть короткой — не длиннее 20 символов, — а сам чип обычно имеет скруглённые на 8dp углы и по умолчанию не имеет тени.' },
+    { type:'image', src:'assets/md-chips-hero.png', alt:'Четыре варианта чипа: assist с иконкой календаря, filter с галочкой, input с крестиком закрытия и suggestion', caption:'Четыре варианта: assist, filter, input и suggestion chip' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Не заменяйте чипами основные действия — переход к следующему шагу задачи всегда должен быть кнопкой, а не чипом.\n\nНе показывайте единственный чип в одиночку — чипы всегда группируются в набор, который при необходимости можно прокручивать по горизонтали.\n\nВ пределах одного экрана не смешивайте поведение наборов чипов — если один набор допускает выбор нескольких чипов сразу, остальные наборы на этом экране должны работать так же.' }
+  ]},
+  'md-switch': { blocks: [
+    { type:'caption', text:'Из документации Material Design' },
+    { type:'text', text:'Switch мгновенно включает и выключает одну настройку — без отдельного подтверждения или сохранения: действие вступает в силу сразу после переключения. Подходит для бинарного выбора вроде вкл/выкл или да/нет, но не для выбора между взаимоисключающими вариантами — например, режимами отображения списка или карты, — для них лучше подходит сегментированная кнопка.\n\nВнутри бегунка может быть необязательная иконка, которая ясно показывает состояние — например, крестик и галочка, а не более абстрактные значки вроде луны. Свитч всегда сопровождается подписью рядом с ним — писать текст внутри самого переключателя нельзя, для этого не хватит места.\n\nПри переключении бегунок не только сдвигается на другую сторону трека, но и меняет размер — во включённом состоянии он крупнее.' },
+    { type:'image', src:'assets/md-switch-hero.png', alt:'Два переключателя — выключенный серый и включённый фиолетовый с галочкой внутри бегунка', caption:'Выключенное и включённое состояние переключателя' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Используйте чекбоксы, если нужно выбрать несколько вариантов из списка, и радиокнопки — если только один; свитч предназначен именно для отдельных настроек, а не для выбора из списка.\n\nСвитч не может заменить кнопку — призыв к действию человек ожидает увидеть именно кнопкой.\n\nЕсли для применения изменения нужно отдельное подтверждение или сохранение, используйте чекбокс, а не свитч: свитч всегда действует мгновенно.' }
+  ]},
+  'md-progress-indicators': { blocks: [
+    { type:'caption', text:'Из документации Material Design' },
+    { type:'text', text:'Progress indicators показывают статус длительной операции — загрузки приложения, отправки формы, сохранения изменений — и появляются только на время её выполнения. Индикатор не нужен, если ожидание короче 200 мс; для ожидания от 200 мс до 5 секунд подходит индикатор загрузки, для более долгих процессов — индикатор прогресса.\n\nЕсть два варианта отображения: линейный — вдоль края контейнера, который загружается, и круговой — по центру элемента. Один и тот же процесс в приложении всегда должен использовать один и тот же вариант.\n\nИндикатор бывает определённым (известны прогресс и время ожидания, заполняется от 0% до 100%) и неопределённым (время неизвестно, индикатор просто циклично движется по треку). По мере поступления новой информации неопределённый индикатор может смениться определённым.' },
+    { type:'image', src:'assets/md-progress-indicators-hero.png', alt:'Линейные и круговые индикаторы прогресса — плоские и волнистые, для четырёх процессов', caption:'Линейный и круговой варианты — плоская и волнистая форма индикатора' },
+    { type:'heading', text:'Рекомендации' },
+    { type:'text', text:'Показывайте один индикатор на группу загружаемых элементов, а не по индикатору на каждый — если только они не загружаются независимо друг от друга.\n\nКруговой индикатор в кнопке уместен для коротких действий до 5 секунд; не добавляйте индикатор в каждую кнопку списка одновременно.\n\nДля право-налево языков линейный индикатор нужно зеркально отражать по горизонтали — круговой в этом не нуждается.' }
   ]}
 };
 
@@ -2354,14 +2552,25 @@ function startQuiz(){
   showScreen('screen-quiz');
 }
 
-function buildGlobalQuizPool(n){
+function buildQuizPool(n, allowedGroups){
   const all = [];
-  DATA.filter(cat => (cat.group || 'components') === 'components').forEach(cat => cat.components.forEach(c => all.push(c.id)));
+  DATA.filter(cat => allowedGroups.includes(cat.group || 'components')).forEach(cat => cat.components.forEach(c => all.push(c.id)));
   for(let i = all.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
     [all[i], all[j]] = [all[j], all[i]];
   }
   return all.slice(0, Math.min(n, all.length));
+}
+// 'Общая викторина' mixes every testable section together; each section's own
+// quiz (started from its mode-select screen) stays scoped to just its group.
+function buildGlobalQuizPool(n){
+  return buildQuizPool(n, ['components', 'material-components']);
+}
+function buildHigQuizPool(n){
+  return buildQuizPool(n, ['components']);
+}
+function buildMaterialQuizPool(n){
+  return buildQuizPool(n, ['material-components']);
 }
 
 function startGlobalQuiz(scope){
@@ -2370,7 +2579,9 @@ function startGlobalQuiz(scope){
   state.quizScope = scope || 'global';
   state.mode = 'quiz';
   state.index = 0;
-  state.globalIds = buildGlobalQuizPool(10);
+  state.globalIds = state.quizScope === 'hig' ? buildHigQuizPool(10)
+    : state.quizScope === 'material' ? buildMaterialQuizPool(10)
+    : buildGlobalQuizPool(10);
   state.quizResults = new Array(state.globalIds.length).fill(null);
   saveProgress();
   renderQuizCard();
@@ -2560,6 +2771,8 @@ function showResult(){
   // once more sections (e.g. Material Design) get their own question pools.
   document.getElementById('resultCatLabel').innerHTML = state.quizScope === 'hig'
     ? `в викторине «Готовые элементы iOS»`
+    : state.quizScope === 'material'
+    ? `в викторине «Material Design»`
     : `в разделе «${cat.title}»`;
   clearProgress();
   showScreen('screen-result');
